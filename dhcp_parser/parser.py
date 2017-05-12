@@ -12,12 +12,11 @@ def read_log_file(line):
 
 
 def process_file(path):
-
     file_size = os.path.getsize(path)
     try:
+        if redis_db.get("file:offset") == None:
+            redis_db.set("file:offset", "0")
         while True:
-            if redis_db.get("file:offset") == None:
-                redis_db.set("file:offset", "0")
             file_handler = open(path)
             if int(redis_db.get("file:offset")) > file_size:
                 file_handler.seek(0)
