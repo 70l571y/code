@@ -7,7 +7,7 @@ import time
 ip_mac_regexp = r'(([^:]+):){3} ([^ ]+ ){2}(?P<ip>[^ ]+) [^ ]+ (?P<mac>[^ ]+)'
 
 
-def read_log_file(line):
+def process_line(line):
     if 'DHCPOFFER' in line:
         rex = re.search(ip_mac_regexp, line)
         redis_db.set(rex.group("mac"), rex.group("ip"))
@@ -22,7 +22,7 @@ def process_file(path):
                 offset = 0 if offset > file_size else offset
 
                 while not file_handler.eof():
-                    read_log_file(file_handler.readline())
+                    process_line(file_handler.readline())
 
                 redis_db.set("file:offset", file_handler.tell())
             time.sleep(5)
