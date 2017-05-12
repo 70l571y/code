@@ -4,8 +4,10 @@ import os
 import time
 
 
+ip_mac_regexp = r'(([^:]+):){3} ([^ ]+ ){2}(?P<ip>[^ ]+) [^ ]+ (?P<mac>[^ ]+)'
+
+
 def read_log_file(line):
-    ip_mac_regexp = r'(([^:]+):){3} ([^ ]+ ){2}(?P<ip>[^ ]+) [^ ]+ (?P<mac>[^ ]+)'
     if 'DHCPOFFER' in line:
         rex = re.search(ip_mac_regexp, line)
         redis_db.set(rex.group("mac"), rex.group("ip"))
@@ -14,22 +16,15 @@ def read_log_file(line):
 def process_file(path):
     file_size = os.path.getsize(path)
     try:
-        if redis_db.get("file:offset") == None:
-            redis_db.set("file:offset", "0")
+        offset = int(redis_db.get("file:offset", 0))
         while True:
-            file_handler = open(path)
-            if int(redis_db.get("file:offset")) > file_size:
-                file_handler.seek(0)
-            else:
-                file_handler.seek(int(redis_db.get("file:offset")))
+            with open(path) as file_handler:
+                offset = 0 if offset > file_size else offset
 
-            while True:
-                line = file_handler.readline()
+                while not file_handler.eof():
+                    read_log_file(file_handler.readline())
+
                 redis_db.set("file:offset", file_handler.tell())
-                read_log_file(line)
-                if os.path.getsize(path) == int(redis_db.get("file:offset")):
-                    file_handler.close()
-                    break
             time.sleep(5)
 
     except (IOError, OSError):
@@ -40,8 +35,7 @@ if __name__ == '__main__':
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
         response = redis_db.client_list()
-
-    except (redis.exceptions.ConnectionError, ConnectionRefusedError):
+    except (redis.exceptions.ConnectiоnError, ConnectionRefusedError):
         print("Connection refused - Unable to connect to Redis")
     else:
         filepath = "dhcpgen.log"
