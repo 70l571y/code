@@ -1,0 +1,4 @@
+Apr  4 04:30:02 src@localhost dhcpd: DHCPOFFER on 10.26.246.254 to 1c:74:0d:8d:ee:59 (Keenetic_Lite) via 109.226.250.21
+Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 172.18.132.231 to 14:d6:4d:37:66:e7 via 109.226.250.32
+Apr  4 04:30:02 src@localhost dhcpd: DHCPOFFER on 10.26.246.254 to 1c:74:0d:8d:ee:59 (Keenetic_Lite) via 109.226.250.21
+Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 172.18.132.231 to 14:d6:4d:37:66:e7 via 109.226.250.32
