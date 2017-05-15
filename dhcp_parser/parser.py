@@ -16,16 +16,27 @@ def process_line(line):
 def process_file(path):
     file_size = os.path.getsize(path)
     try:
-        offset = int(redis_db.get("file:offset", 0))
+        if redis_db.get("file:offset") == None:
+            redis_db.set("file:offset", "0")
+
+        offset = int(redis_db.get("file:offset"))
         while True:
             with open(path) as file_handler:
                 offset = 0 if offset > file_size else offset
 
-                while not file_handler.eof():
+                while True:
+                    redis_db.set("file:offset", file_handler.tell())
                     process_line(file_handler.readline())
+                    if os.path.getsize(path) == int(redis_db.get("file:offset")):
+                        file_handler.close()
+                        break
+                time.sleep(5)
 
-                redis_db.set("file:offset", file_handler.tell())
-            time.sleep(5)
+                # while not file_handler.eof():
+                #     process_line(file_handler.readline())
+
+                # redis_db.set("file:offset", file_handler.tell())
+            # time.sleep(5)
 
     except (IOError, OSError):
         print("Error opening / processing file")
@@ -35,7 +46,7 @@ if __name__ == '__main__':
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
         response = redis_db.client_list()
-    except (redis.exceptions.ConnectiоnError, ConnectionRefusedError):
+    except (redis.exceptions.ConnectionError, ConnectionRefusedError):
         print("Connection refused - Unable to connect to Redis")
     else:
         filepath = "dhcpgen.log"
