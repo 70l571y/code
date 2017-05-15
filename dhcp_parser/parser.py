@@ -32,12 +32,6 @@ def process_file(path):
                         break
                 time.sleep(5)
 
-                # while not file_handler.eof():
-                #     process_line(file_handler.readline())
-
-                # redis_db.set("file:offset", file_handler.tell())
-            # time.sleep(5)
-
     except (IOError, OSError):
         print("Error opening / processing file")
 
