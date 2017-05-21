@@ -43,5 +43,5 @@ if __name__ == '__main__':
     except (redis.exceptions.ConnectionError, ConnectionRefusedError):
         print("Connection refused - Unable to connect to Redis")
     else:
-        filepath = "dhcpgen.log"
+        filepath = "/var/log/dhcpd.log"
         process_file(filepath)
