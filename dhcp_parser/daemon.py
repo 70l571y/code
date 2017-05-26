@@ -12,40 +12,7 @@ _std = '/dev/null'
 
 
 def daemon_exec(func, action, pidfile, stdin=_std, stdout=_std, stderr=_std):
-    """ Implements daemon action ('start', 'stop', etc.) relative to func
-    Arguments:
-    func -- function object (infinite loop) to daemonize.
-    action -- daemon action. See DMN_Actions for details.
-    pidfile -- full name of file for keeping pid
-    std -- dict with ('stdin', 'stdout', 'stderr') keys to redirect stream.
-        Default is '/dev/null'
-    Simple doctest:
-    >>> import os
-    >>> import os.path as op
-    >>> fn = op.join(os.getenv('HOME'), "daemon_exec_test.pid")
-    >>> def func():
-    ...    while True: sleep(10)
-    ...
-    >>> daemon_exec(func, 'test', fn)
-    Traceback (most recent call last):
-        ...
-    DMN_UnknownActionException: Unknown action 'test'
-        Action should be in ('restart', 'start', 'stop')
-    >>> daemon_exec(func, 'start', fn)  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-        ...
-    SystemExit: ...
-    >>> sleep(0.1)
-    >>> op.isfile(fn)
-    True
-    >>> daemon_exec(func, 'stop', fn)  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-        ...
-    SystemExit: ...
-    >>> sleep(0.1)
-    >>> op.isfile(fn)
-    False
-    """
+
     if action not in DMN_Actions:
         raise DMN_UnknownActionException(action)
     DMN_Actions[action](pidfile, func, stdin, stdout, stderr)
