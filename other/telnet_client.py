@@ -3,16 +3,6 @@ import getpass
 from time import sleep
 
 
-# def connect():
-#     print("Starting Client...")
-#     host = "192.168.225.72"
-#     timeout = 10
-#
-#     print("Connecting...")
-#     self = telnetlib.Telnet(host, 23, timeout)
-
-
-
 def upgrade_firmware():
     print("Starting Client...")
     host = "192.168.225.72"
@@ -76,10 +66,11 @@ def upgrade_config():
 def testing():
     print("Starting Client...")
     host = "192.168.225.72"
-    timeout = 10
-    variables = f"show ports {timeout}\n"
+    timeout = 3
+    variables = f"conf ports {timeout} state disable\n"
     print("Connecting...")
-    testing_session = telnetlib.Telnet(host, 23, timeout)
+    testing_session = telnetlib.Telnet()
+    testing_session.open(host, 23, timeout)
 
     print("Autorisation...")
     user = input("Enter username: ")
@@ -90,7 +81,7 @@ def testing():
     print("Reading...")
 
     testing_session.write(variables.encode('ascii') + b"\n")
-    print(testing_session.read_until(b"Auto"))
+    # print(testing_session.read_until(b"Auto"))
     testing_session.write(b"logout\n")
     testing_session.close()
 
