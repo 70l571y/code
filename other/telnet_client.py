@@ -48,26 +48,15 @@ def upgrade_firmware():
         break
 
     session_upd_firm.write(boot_up.encode('ascii') + b"\n")
-    session_upd_firm.write(b"save" + b"\n")
-    session_upd_firm.write(b"reboot force_agree" + b"\n")
+    session_upd_firm.write(b"save\n")
+    session_upd_firm.write(b"reboot force_agree\n")
     session_upd_firm.close()
-
-def upgrade_config():
-    print("Starting Client...")
-    host = "192.168.225.72"
-    timeout = 10
-    print("Connecting...")
-    session_upd_config = telnetlib.Telnet(host, 23, timeout)
-
-    config = b"download cfg_fromFTP ftp://ftp:rhtyltkmivtyltkm@10.90.90.1/AutoconfigCfg/DGS-1210-28/dgs1210-28.cfg config_id 1\n"
-    session_upd_config.write(config.encode('ascii'))
-    session_upd_config.close()
 
 def testing():
     print("Starting Client...")
     host = "192.168.225.72"
     timeout = 3
-    variables = f"conf ports {timeout} state disable\n"
+    variables = f"show ports {timeout}\n"
     print("Connecting...")
     testing_session = telnetlib.Telnet()
     testing_session.open(host, 23, timeout)
@@ -81,7 +70,7 @@ def testing():
     print("Reading...")
 
     testing_session.write(variables.encode('ascii') + b"\n")
-    # print(testing_session.read_until(b"Auto"))
+    print(testing_session.read_until(b"Auto"))
     testing_session.write(b"logout\n")
     testing_session.close()
 
