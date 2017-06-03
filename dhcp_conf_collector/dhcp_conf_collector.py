@@ -3,11 +3,11 @@ from sshtunnel import SSHTunnelForwarder
 import json
 
 def main():
-    with open('/home/sid/PycharmProjects/dhcp/other/config.json', 'r') as f:
+    with open('/home/sid/PycharmProjects/dhcp/other/config.json') as f:
         config = json.load(f)
     try:
         with SSHTunnelForwarder(
-                (config['ssh_host'], config['ssh_port']),
+                (config['ssh_host'], int(config['ssh_port'])),
                 ssh_password=config['password'],
                 ssh_username=config['username'],
                 remote_bind_address=('127.0.0.1', 5432)) as server:
