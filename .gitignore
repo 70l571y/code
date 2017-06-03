@@ -1,9 +1,3 @@
 # Created by .ignore support plugin (hsz.mobi)
-.idea/dbnavigator.xml
-.idea/dhcp.iml
-.idea/inspectionProfiles/
-.idea/misc.xml
-.idea/modules.xml
-.idea/workspace.xml
-.idea/
+.idea/*
 other/config.json
