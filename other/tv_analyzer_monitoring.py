@@ -32,7 +32,7 @@ def main():
                                     sms_text = f"Соколовская 76а: низкий уровень сигнала на анализаторе : {currentSignalStrength} dBuV"
                                     send_sms(sms_text)
                                     break
-                    time.sleep(60)
+                        time.sleep(60)
         time.sleep(60)
 
 if __name__ == '__main__':
