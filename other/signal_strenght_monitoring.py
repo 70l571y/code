@@ -12,6 +12,7 @@ def send_sms(text):
     sms_text = {text}
     enc_sms_text = urllib.parse.urlencode(sms_text)
     url = "https://sms.ru/sms/send?api_id=1263F23C-04F1-D64A-EAAD-146773D980FC&to=79059743304&msg="
+    #url = "https://sms.ru/sms/send?api_id=CCE170B7-6F1F-1614-EB4F-C987F279B26C&to=79135710835&msg="
     f = urllib.request.urlopen(url + enc_sms_text)
 
 def main():
