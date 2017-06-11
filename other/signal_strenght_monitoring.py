@@ -28,7 +28,7 @@ def main():
                               UdpTransportTarget(('172.23.104.1', 161)),
                               ContextData(),
                               ObjectType(ObjectIdentity(
-                                  'SNMPv2-SMI', 'enterprises', 32108)),
+                                  'SNMPv2-SMI', 'enterprises', '32108.2.4.3.3.1.2')),
                               lookupMib=False):
 
         if errorIndication:
@@ -40,9 +40,13 @@ def main():
             break
         else:
             for varBind in varBinds:
-                print(' = '.join([x.prettyPrint() for x in varBind]))
+                a = list(x.prettyPrint() for x in varBind)
+                # print(' = '.join([x.prettyPrint() for x in varBind]))
+                print(a[1])
+
 
 
 
 if __name__ == '__main__':
-    daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
+    # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
+    main()
