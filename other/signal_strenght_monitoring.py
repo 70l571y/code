@@ -30,7 +30,6 @@ def main():
                               ObjectType(ObjectIdentity(
                                   'SNMPv2-SMI', 'enterprises', '32108.2.4.3.3.1.2')),
                               lookupMib=False):
-
         if errorIndication:
             print(errorIndication)
             break
@@ -41,8 +40,10 @@ def main():
         else:
             for varBind in varBinds:
                 a = list(x.prettyPrint() for x in varBind)
-                # print(' = '.join([x.prettyPrint() for x in varBind]))
                 print(a[1])
+
+                # print(' = '.join([x.prettyPrint() for x in varBind]))
+
 
 
 
