@@ -28,14 +28,12 @@ def main():
                 currentSignalStrength = int(signalStrength[i]) / 10
                 smsText = "Соколовская 76а: высокий уровень сигнала на анализаторе : {} dBuV".format(currentSignalStrength)
                 send_sms(smsText)
-                currentSignalStrengthChannel = int(signalStrength[i])
                 time.sleep(60)
                 while True:
                     repeatSignalStrenght = netsnmp.snmpwalk(oid, Version=1, DestHost="172.23.104.1", Community="public")
-
-                    if currentSignalStrengthChannel < 250:
+                    if repeatSignalStrenght[i] < 250:
                         currentSignalStrength = int(signalStrength[i]) / 10
-                        smsText = "Соколовская 76а: низкий уровень сигнала на анализаторе : {} dBuV".format(currentSignalStrength)
+                        smsText = "Соколовская 76а: низкий уровень сигнала на анализаторе : {} dBuV".format(currentSignalStrength[i])
                         send_sms(smsText)
                     break
                     time.sleep(60)
