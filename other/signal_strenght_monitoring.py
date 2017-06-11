@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from pysnmp.hlapi import *
 import time
 import urllib.request
@@ -41,25 +42,7 @@ def main():
             for varBind in varBinds:
                 print(' = '.join([x.prettyPrint() for x in varBind]))
 
-    oid = netsnmp.Varbind('enterprises.32108.2.4.3.3.1.2')
-    while True:
-        signalStrength = netsnmp.snmpwalk(oid, Version=1, DestHost="172.23.104.1", Community="public")
-        for i in range(len(signalStrength)):
-            if int(signalStrength[i]) > 250:
-                time.sleep(60)
-                currentSignalStrength = int(signalStrength[i]) / 10
-                smsText = "Соколовская 76а: высокий уровень сигнала на анализаторе : {} dBuV".format(currentSignalStrength)
-                send_sms(smsText)
-                time.sleep(60)
-                while True:
-                    repeatSignalStrenght = netsnmp.snmpwalk(oid, Version=1, DestHost="172.23.104.1", Community="public")
-                    if repeatSignalStrenght[i] < 250:
-                        currentSignalStrength = int(signalStrength[i]) / 10
-                        smsText = "Соколовская 76а: низкий уровень сигнала на анализаторе : {} dBuV".format(currentSignalStrength[i])
-                        send_sms(smsText)
-                    break
-                    time.sleep(60)
-        time.sleep(60)
+
 
 if __name__ == '__main__':
     daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
