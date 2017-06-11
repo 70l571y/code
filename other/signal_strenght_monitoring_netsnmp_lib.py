@@ -1,4 +1,4 @@
-from pysnmp.hlapi import *
+import netsnmp
 import time
 import urllib.request
 import urllib.parse
@@ -19,28 +19,6 @@ def send_sms(text):
     f = urllib.request.urlopen(url + encSMSText)
 
 def main():
-    for (errorIndication,
-         errorStatus,
-         errorIndex,
-         varBinds) in nextCmd(SnmpEngine(),
-                              CommunityData('public', mpModel=0),
-                              UdpTransportTarget(('172.23.104.1', 161)),
-                              ContextData(),
-                              ObjectType(ObjectIdentity(
-                                  'SNMPv2-SMI', 'enterprises', 32108)),
-                              lookupMib=False):
-
-        if errorIndication:
-            print(errorIndication)
-            break
-        elif errorStatus:
-            print('%s at %s' % (errorStatus.prettyPrint(),
-                                errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
-            break
-        else:
-            for varBind in varBinds:
-                print(' = '.join([x.prettyPrint() for x in varBind]))
-
     oid = netsnmp.Varbind('enterprises.32108.2.4.3.3.1.2')
     while True:
         signalStrength = netsnmp.snmpwalk(oid, Version=1, DestHost="172.23.104.1", Community="public")
