@@ -1,10 +1,6 @@
-"""
-Daemonizing tools.
-"""
 import os
 import sys
 import signal
-from time import sleep
 from atexit import register
 
 
@@ -22,7 +18,6 @@ class Daemon:
     """
     A Class to  daemonizing function func.
     """
-
     def daemonize(self, pidfile, stdin, stdout, stderr):
         """
         do the UNIX double-fork magic,
@@ -136,16 +131,9 @@ DMN_Actions = {
 
 class DMN_UnknownActionException(Exception):
     """ Exception for wrong action """
-
     def __init__(self, action):
         self.action = action
 
     def __str__(self):
         s = "Unknown action '{0}'\n    Action should be in {1}"
         return s.format(self.action, tuple(sorted(DMN_Actions)))
-
-
-if __name__ == "__main__":
-    import doctest
-    # doctest.testmod(raise_on_error=True)
-doctest.testmod()

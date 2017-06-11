@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from pysnmp.hlapi import *
 import time
 import urllib.request
@@ -6,7 +6,7 @@ import urllib.parse
 import os
 from daemon import daemon_exec
 
-pathToPID = '/tmp/roman/'
+pathToPID = '/tmp/roman/daemons/'
 nameOfPID = 'signal_strenght'
 if not os.path.exists(pathToPID):
     os.makedirs(pathToPID)
