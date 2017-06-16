@@ -34,6 +34,7 @@ def check_IP(mac_address):
     sql = "select switch_data from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result = sql_request(sql)
     return result[0]['ip']
+    #сделать булеву проверку на соответствие ip адреса с redis
 
 
 def read_redis():
@@ -53,9 +54,8 @@ def read_redis():
                     continue
                 print(result[0])
                 # check_IP(result[0])
-            print(check_IP(redis_current_key))
+            print(check_IP('30-71-B2-61-C3-EF'))
             break
-
 
 
 def main():
