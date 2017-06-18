@@ -3,11 +3,11 @@ from sshtunnel import SSHTunnelForwarder
 import json
 import redis
 import re
+import subprocess
 
 def sql_request(sql):
     curs.execute(sql)
     rows = curs.fetchone()
-    curs.close()
     return rows
 
 def check_network_settings(mac_address):
@@ -20,16 +20,10 @@ def check_allocation(mac_address):
     #Вернет истину если свитч в красноярском продакшине
     allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     allocation = sql_request(allocation_req)
-    return allocation[4]
-    # if allocation[4] == 1:
-    #     city_allocation = "select * from allocation where id={};".format(allocation[4])
-    #     result_city = sql_request(city_allocation)
-    #     return True if result_city[2] == 1 else False
-
-
-    # sql = "select * from allocation where id={};".format(result_sql_request_allocation[4])
-    # result = sql_request(sql)
-    # return result
+    if allocation[4] == 1:
+        city_allocation = "select * from allocation where id={};".format(allocation[4])
+        result_city = sql_request(city_allocation)
+        return True if result_city[2] == 1 else False
 
 def read_redis():
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
@@ -48,6 +42,7 @@ def read_redis():
                     continue
                 # print(check_allocation(result[0]))
                 print(check_allocation('30-71-B2-61-C3-EF'))
+                break
             break
 
 
@@ -62,7 +57,6 @@ if __name__ == "__main__":
                 ssh_username=config['username'],
                 remote_bind_address=('127.0.0.1', 5432)) as server:
             server.start()
-            print("SSH server connected")
             conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password,
                                     host="localhost",
                                     port=server.local_bind_port)
@@ -70,33 +64,8 @@ if __name__ == "__main__":
             read_redis()
 
     except:
-        print("SSH server connection - Failed")
+        print("Connection server - Failed")
 
 
 
-'''
-import psycopg2
-import subprocess
-
-connection = psycopg2.connect(
-    database=database,
-    user=username,
-    password=password,
-    host=host,
-    port=port
-)
-
-print connection.closed # 0
-
-# restart the db externally
-subprocess.check_call("sudo /etc/init.d/postgresql restart", shell=True)
-
-# this query will fail because the db is no longer connected
-try:
-    cur = connection.cursor()
-    cur.execute('SELECT 1')
-except psycopg2.OperationalError:
-    pass
-
-print connection.closed # 2
-'''
+#subprocess.check_call("sudo /etc/init.d/dhcpd restart", shell=True)
