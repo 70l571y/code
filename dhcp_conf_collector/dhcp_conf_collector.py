@@ -20,7 +20,7 @@ def check_allocation(mac_address):
     #Вернет истину если свитч в красноярском продакшине
     allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     allocation = sql_request(allocation_req)
-    return allocation
+    return allocation[4]
     # if allocation[4] == 1:
     #     city_allocation = "select * from allocation where id={};".format(allocation[4])
     #     result_city = sql_request(city_allocation)
@@ -63,15 +63,40 @@ if __name__ == "__main__":
                 remote_bind_address=('127.0.0.1', 5432)) as server:
             server.start()
             print("SSH server connected")
-            try:
-                conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password, host="localhost",
-                                        port=server.local_bind_port)
-            except:
-                print("DB connection - Failed")
-            else:
-                curs = conn.cursor()
-                print("DB connected across SSH Thunnel")
-                read_redis()
+            conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password,
+                                    host="localhost",
+                                    port=server.local_bind_port)
+            curs = conn.cursor()
+            read_redis()
+
     except:
         print("SSH server connection - Failed")
 
+
+
+'''
+import psycopg2
+import subprocess
+
+connection = psycopg2.connect(
+    database=database,
+    user=username,
+    password=password,
+    host=host,
+    port=port
+)
+
+print connection.closed # 0
+
+# restart the db externally
+subprocess.check_call("sudo /etc/init.d/postgresql restart", shell=True)
+
+# this query will fail because the db is no longer connected
+try:
+    cur = connection.cursor()
+    cur.execute('SELECT 1')
+except psycopg2.OperationalError:
+    pass
+
+print connection.closed # 2
+'''
