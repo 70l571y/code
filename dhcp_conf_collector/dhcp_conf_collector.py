@@ -4,38 +4,32 @@ import json
 import redis
 import re
 
-def sql_request(sql_request):
-    with open('/home/sid/PycharmProjects/dhcp/other/config.json') as f:
-        config = json.load(f)
-    try:
-        with SSHTunnelForwarder(
-                (config['ssh_host'], int(config['ssh_port'])),
-                ssh_password=config['password'],
-                ssh_username=config['username'],
-                remote_bind_address=('127.0.0.1', 5432)) as server:
-            server.start()
-            print("SSH server connected")
-            try:
-                conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password, host="localhost",
-                                        port=server.local_bind_port)
-                curs = conn.cursor()
-                print("DB connected across SSH Thunnel")
-                curs.execute(sql_request)
-                rows = curs.fetchone()
-                curs.close()
-                return rows
-            except:
-                print("DB connection - Failed")
-    except:
-        print("SSH server connection - Failed")
+def sql_request(sql):
+    curs.execute(sql)
+    rows = curs.fetchone()
+    curs.close()
+    return rows
 
-
-def check_IP(mac_address):
-    sql = "select switch_data from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
-    result = sql_request(sql)
-    return result[0]['ip']
+def check_network_settings(mac_address):
+    sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    result_IP = sql_request(sql_req_IP)
+    return result_IP[5]['ip']
     #сделать булеву проверку на соответствие ip адреса с redis
 
+def check_allocation(mac_address):
+    #Вернет истину если свитч в красноярском продакшине
+    allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    allocation = sql_request(allocation_req)
+    return allocation
+    # if allocation[4] == 1:
+    #     city_allocation = "select * from allocation where id={};".format(allocation[4])
+    #     result_city = sql_request(city_allocation)
+    #     return True if result_city[2] == 1 else False
+
+
+    # sql = "select * from allocation where id={};".format(result_sql_request_allocation[4])
+    # result = sql_request(sql)
+    # return result
 
 def read_redis():
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
@@ -52,18 +46,32 @@ def read_redis():
                 result = re.findall(mac_regexp, redis_current_key)
                 if not result: #так как будут пустые записи в БД, которые не соответствуют mac_regexp
                     continue
-                print(result[0])
-                # check_IP(result[0])
-            print(check_IP('30-71-B2-61-C3-EF'))
+                # print(check_allocation(result[0]))
+                print(check_allocation('30-71-B2-61-C3-EF'))
             break
 
 
-def main():
-    read_redis()
-
-        # print(sql_request(sql))
-        # rkeys = redis_db.keys()
-        # print(rkeys)
 
 if __name__ == "__main__":
-	main()
+    with open('/home/sid/PycharmProjects/dhcp/other/config.json') as f:
+        config = json.load(f)
+    try:
+        with SSHTunnelForwarder(
+                (config['ssh_host'], int(config['ssh_port'])),
+                ssh_password=config['password'],
+                ssh_username=config['username'],
+                remote_bind_address=('127.0.0.1', 5432)) as server:
+            server.start()
+            print("SSH server connected")
+            try:
+                conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password, host="localhost",
+                                        port=server.local_bind_port)
+            except:
+                print("DB connection - Failed")
+            else:
+                curs = conn.cursor()
+                print("DB connected across SSH Thunnel")
+                read_redis()
+    except:
+        print("SSH server connection - Failed")
+
