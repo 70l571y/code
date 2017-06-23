@@ -5,6 +5,7 @@ import redis
 import re
 import os
 from daemon import daemon_exec
+import time
 #import subprocess
 
 pathToPID = '/tmp/roman/daemons/'
@@ -12,7 +13,7 @@ nameOfPID = 'conf_collector'
 if not os.path.exists(pathToPID):
     os.makedirs(pathToPID)
 out = {'stdout': pathToPID + nameOfPID + '.log'}
-action = 'start'
+action = 'stop'
 
 def sql_request(sql):
     curs.execute(sql)
@@ -49,11 +50,12 @@ def read_redis():
                 result = re.findall(mac_regexp, redis_current_key)
                 if not result:
                     continue
-                print(result[0])
+                print('mac адрес: ' + result[0] + ' - успешно проверен')
+                time.sleep(1)
                 # print(check_allocation('70:62:f8:53:1f:e7'))
                 # if check_allocation(result[0])
                 # break
-            break
+            # break
 
 
 
@@ -70,11 +72,15 @@ if __name__ == "__main__":
             conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password,
                                     host="localhost",
                                     port=server.local_bind_port)
-            curs = conn.cursor()
-            daemon_exec(read_redis, action, pathToPID + nameOfPID + '.pid', **out)
 
     except:
         print("Connection server - Failed")
+
+    else:
+        curs = conn.cursor()
+        daemon_exec(read_redis, action, pathToPID + nameOfPID + '.pid', **out)
+        # read_redis()
+
 
 
 

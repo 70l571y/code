@@ -8,6 +8,8 @@ from daemon import daemon_exec
 
 pathToPID = '/tmp/roman/daemons/'
 nameOfPID = 'signal_strenght'
+oid = netsnmp.Varbind('enterprises.32108.2.4.3.3.1.2')
+tresholdValue = 250
 if not os.path.exists(pathToPID):
     os.makedirs(pathToPID)
 out = {'stdout': pathToPID + nameOfPID + '.log'}
@@ -21,7 +23,7 @@ def send_sms(text):
     f = urllib.request.urlopen(url + encSMSText)
 
 def snmp_walk():
-    oid = netsnmp.Varbind('enterprises.32108.2.4.3.3.1.2')
+
     signalStrength = netsnmp.snmpwalk(
         oid, Version=1, DestHost="172.23.104.1", Community="public")
     print(time.ctime(), '- сняты показания по SNMP с устройства')
@@ -31,7 +33,7 @@ def main():
     while True:
         analysisBigSignalStrenght = snmp_walk()
         for i in range(len(analysisBigSignalStrenght)):
-            if int(analysisBigSignalStrenght[i]) > 250:
+            if int(analysisBigSignalStrenght[i]) > tresholdValue:
                 currentSignalStrength = int(analysisBigSignalStrenght[i]) / 10
                 smsText = "Соколовская 76а: высокий уровень сигнала на анализаторе : {} dBuV".format(
                     currentSignalStrength)
@@ -40,7 +42,7 @@ def main():
                 time.sleep(10)
                 while True:
                     analysisSmallSignalStrenght = snmp_walk()
-                    if analysisSmallSignalStrenght[i] < 250:
+                    if analysisSmallSignalStrenght[i] < tresholdValue:
                         currentSignalStrength = int(analysisSmallSignalStrenght[i]) / 10
                         smsText = "Соколовская 76а: низкий уровень сигнала на анализаторе : {} dBuV".format(
                             currentSignalStrength[i])
