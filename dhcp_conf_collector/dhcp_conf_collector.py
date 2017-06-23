@@ -4,16 +4,18 @@ import json
 import redis
 import re
 import os
-from daemon import daemon_exec
+from other.daemon import daemon_exec
 import time
+import sys
 #import subprocess
 
+sys.path.append("..")
 pathToPID = '/tmp/roman/daemons/'
 nameOfPID = 'conf_collector'
 if not os.path.exists(pathToPID):
     os.makedirs(pathToPID)
 out = {'stdout': pathToPID + nameOfPID + '.log'}
-action = 'stop'
+action = 'start'
 
 def sql_request(sql):
     curs.execute(sql)
