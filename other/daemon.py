@@ -9,9 +9,9 @@ _std = '/dev/null'
 
 def daemon_exec(func, action, pidfile, stdin=_std, stdout=_std, stderr=_std):
 
-    if action not in DMN_Actions:
-        raise DMN_UnknownActionException(action)
-    DMN_Actions[action](pidfile, func, stdin, stdout, stderr)
+    if action not in Actions:
+        raise UnknownActionException(action)
+    Actions[action](pidfile, func, stdin, stdout, stderr)
 
 
 class Daemon:
@@ -123,17 +123,17 @@ class Daemon:
         self.start(pidfile, func, stdin, stdout, stderr)
 
 
-DMN_Actions = {
+Actions = {
     'start': Daemon().start,
     'stop': Daemon().stop,
     'restart': Daemon().restart}
 
 
-class DMN_UnknownActionException(Exception):
+class UnknownActionException(Exception):
     """ Exception for wrong action """
     def __init__(self, action):
         self.action = action
 
     def __str__(self):
         s = "Unknown action '{0}'\n    Action should be in {1}"
-        return s.format(self.action, tuple(sorted(DMN_Actions)))
+        return s.format(self.action, tuple(sorted(Actions)))

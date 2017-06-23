@@ -3,7 +3,16 @@ from sshtunnel import SSHTunnelForwarder
 import json
 import redis
 import re
-import subprocess
+import os
+from daemon import daemon_exec
+#import subprocess
+
+pathToPID = '/tmp/roman/daemons/'
+nameOfPID = 'conf_collector'
+if not os.path.exists(pathToPID):
+    os.makedirs(pathToPID)
+out = {'stdout': pathToPID + nameOfPID + '.log'}
+action = 'start'
 
 def sql_request(sql):
     curs.execute(sql)
@@ -14,7 +23,7 @@ def check_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
     return result_IP[5]['ip']
-    #сделать булеву проверку на соответствие ip адреса с redis
+    #сделать булеву проверку на соответствие ip адреса с redish
 
 def check_allocation(mac_address):
     #Вернет истину если свитч в красноярском продакшине
@@ -38,11 +47,12 @@ def read_redis():
             for i in redis_all_keys:
                 redis_current_key = i.decode('utf-8')
                 result = re.findall(mac_regexp, redis_current_key)
-                if not result: #так как будут пустые записи в БД, которые не соответствуют mac_regexp
+                if not result:
                     continue
-                # print(check_allocation(result[0]))
-                print(check_allocation('30-71-B2-61-C3-EF'))
-                break
+                print(result[0])
+                # print(check_allocation('70:62:f8:53:1f:e7'))
+                # if check_allocation(result[0])
+                # break
             break
 
 
@@ -61,7 +71,7 @@ if __name__ == "__main__":
                                     host="localhost",
                                     port=server.local_bind_port)
             curs = conn.cursor()
-            read_redis()
+            daemon_exec(read_redis, action, pathToPID + nameOfPID + '.pid', **out)
 
     except:
         print("Connection server - Failed")
