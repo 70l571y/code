@@ -20,31 +20,35 @@ def send_sms(text):
     url = "https://sms.ru/sms/send?api_id=CCE170B7-6F1F-1614-EB4F-C987F279B26C&to=79135710835&msg="
     f = urllib.request.urlopen(url + encSMSText)
 
+def snmp_walk():
+    oid = netsnmp.Varbind('enterprises.32108.2.4.3.3.1.2')
+    signalStrength = netsnmp.snmpwalk(
+        oid, Version=1, DestHost="172.23.104.1", Community="public")
+    print(time.ctime(), '- сняты показания по SNMP с устройства')
+    return signalStrength
 
 def main():
-    oid = netsnmp.Varbind('enterprises.32108.2.4.3.3.1.2')
     while True:
-        signalStrength = netsnmp.snmpwalk(
-            oid, Version=1, DestHost="172.23.104.1", Community="public")
-        for i in range(len(signalStrength)):
-            if int(signalStrength[i]) > 250:
-                time.sleep(60)
-                currentSignalStrength = int(signalStrength[i]) / 10
+        analysisBigSignalStrenght = snmp_walk()
+        for i in range(len(analysisBigSignalStrenght)):
+            if int(analysisBigSignalStrenght[i]) > 250:
+                currentSignalStrength = int(analysisBigSignalStrenght[i]) / 10
                 smsText = "Соколовская 76а: высокий уровень сигнала на анализаторе : {} dBuV".format(
                     currentSignalStrength)
+                print(time.ctime(), smsText)
                 send_sms(smsText)
                 time.sleep(60)
                 while True:
-                    repeatSignalStrenght = netsnmp.snmpwalk(
-                        oid, Version=1, DestHost="172.23.104.1", Community="public")
-                    if repeatSignalStrenght[i] < 250:
-                        currentSignalStrength = int(signalStrength[i]) / 10
+                    analysisSmallSignalStrenght = snmp_walk()
+                    if analysisSmallSignalStrenght[i] < 250:
+                        currentSignalStrength = int(analysisSmallSignalStrenght[i]) / 10
                         smsText = "Соколовская 76а: низкий уровень сигнала на анализаторе : {} dBuV".format(
                             currentSignalStrength[i])
+                        print(time.ctime(), smsText)
                         send_sms(smsText)
                     break
                     time.sleep(60)
-        time.sleep(60)
+        time.sleep(10)
 
 if __name__ == '__main__':
     daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
