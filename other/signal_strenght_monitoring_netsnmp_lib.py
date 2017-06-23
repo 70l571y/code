@@ -37,7 +37,7 @@ def main():
                     currentSignalStrength)
                 print(time.ctime(), smsText)
                 send_sms(smsText)
-                time.sleep(60)
+                time.sleep(10)
                 while True:
                     analysisSmallSignalStrenght = snmp_walk()
                     if analysisSmallSignalStrenght[i] < 250:
@@ -47,7 +47,7 @@ def main():
                         print(time.ctime(), smsText)
                         send_sms(smsText)
                     break
-                    time.sleep(60)
+                    time.sleep(10)
         time.sleep(10)
 
 if __name__ == '__main__':
