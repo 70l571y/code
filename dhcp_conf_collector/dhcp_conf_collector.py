@@ -42,30 +42,56 @@ def check_allocation(mac_address):
     allocation = sql_request(allocation_req)
     if allocation == 0:
         return False
+    elif allocation == None:
+        return False
     elif allocation[4] == 1:
         city_allocation = "select * from allocation where id={};".format(allocation[4])
         result_city = sql_request(city_allocation)
         return True if result_city[2] == 1 else False
 
 
-def read_redis():
-    redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
-    try:
-        response = redis_db.client_list()
-    except (redis.exceptions.ConnectionError, ConnectionRefusedError):
-        print(time.ctime(), "Connection refused - Unable to connect to Redis")
-    else:
-        mac_regexp = r'((?:[0-9a-f]{2}:){5}[0-9a-f]{2})'
-        while True:
-            redis_all_keys = redis_db.keys()
-            # print(check_allocation('00-1E-58-A9-01-36'))
-            for keys in redis_all_keys:
-                redis_current_key = keys.decode('utf-8')
-                result = re.findall(mac_regexp, redis_current_key)
-                if not result:
-                    continue
-                print(check_allocation(result[0]))
+def read_config_file(file):
+    while True:
+        data = file.readline()
+        if not data:
             break
+        yield data
+
+
+def check_config_file(mac):
+    try:
+        with open('production.conf') as file_handler:
+            for line in read_config_file(file_handler):
+                if mac in line:
+                    return True
+            return False
+
+            # return False
+    except (IOError, OSError):
+        print("Error opening / processing file")
+
+
+def main():
+    # print(check_allocation('00-1E-58-A9-01-36'))
+    print(check_config_file('00:23:4d:53:ce:82'))
+
+    # redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+    # try:
+    #     response = redis_db.client_list()
+    # except (redis.exceptions.ConnectionError, ConnectionRefusedError):
+    #     print(time.ctime(), "Connection refused - Unable to connect to Redis")
+    # else:
+    #     mac_regexp = r'((?:[0-9A-F]{2}-){5}[0-9A-F]{2})'
+    #     while True:
+    #         redis_all_keys = redis_db.keys()
+    #         for keys in redis_all_keys:
+    #             redis_current_key = keys.decode('utf-8')
+    #             result = re.findall(mac_regexp, redis_current_key)
+    #             if not result:
+    #                 continue
+    #             if check_allocation(result[0]):
+    #                 print('Fuuuuck yeah!!!!')
+
 
 
 if __name__ == "__main__":
@@ -82,11 +108,12 @@ if __name__ == "__main__":
                                     host="localhost",
                                     port=server.local_bind_port)
             curs = conn.cursor()
+            main()
     except:
         print(time.ctime(), "Connection server - Failed")
 
-    else:
-        read_redis()
-        # daemon_exec(read_redis, action, pathToPID + nameOfPID + '.pid', **out)
+    # else:
+    #     main()
+        # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
 
         # subprocess.check_call("sudo /etc/init.d/dhcpd restart", shell=True)
