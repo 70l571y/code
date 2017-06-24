@@ -18,47 +18,54 @@ out = {'stdout': pathToPID + nameOfPID + '.log'}
 action = 'start'
 
 def sql_request(sql):
-    curs.execute(sql)
-    rows = curs.fetchone()
-    return rows
+    try:
+        curs.execute(sql)
+    except (psycopg2.Error) as error:
+        print(error)
+        print(time.ctime(), '- В базе данных нет такого устройства, или некорректен следующий запрос:')
+        print(sql)
+        return 0
+    else:
+        rows = curs.fetchone()
+        return rows
 
 def check_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
     return result_IP[5]['ip']
-    #сделать булеву проверку на соответствие ip адреса с redish
+    # сделать булеву проверку на соответствие ip адреса с redish
+
 
 def check_allocation(mac_address):
-    #Вернет истину если свитч в красноярском продакшине
+    # Вернет истину если свитч в красноярском продакшине
     allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     allocation = sql_request(allocation_req)
-    if allocation[4] == 1:
+    if allocation == 0:
+        return False
+    elif allocation[4] == 1:
         city_allocation = "select * from allocation where id={};".format(allocation[4])
         result_city = sql_request(city_allocation)
         return True if result_city[2] == 1 else False
+
 
 def read_redis():
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
         response = redis_db.client_list()
     except (redis.exceptions.ConnectionError, ConnectionRefusedError):
-        print("Connection refused - Unable to connect to Redis")
+        print(time.ctime(), "Connection refused - Unable to connect to Redis")
     else:
         mac_regexp = r'((?:[0-9a-f]{2}:){5}[0-9a-f]{2})'
         while True:
             redis_all_keys = redis_db.keys()
-            for i in redis_all_keys:
-                redis_current_key = i.decode('utf-8')
+            # print(check_allocation('00-1E-58-A9-01-36'))
+            for keys in redis_all_keys:
+                redis_current_key = keys.decode('utf-8')
                 result = re.findall(mac_regexp, redis_current_key)
                 if not result:
                     continue
-                print('mac адрес: ' + result[0] + ' - успешно проверен')
-                time.sleep(1)
-                # print(check_allocation('70:62:f8:53:1f:e7'))
-                # if check_allocation(result[0])
-                # break
-            # break
-
+                print(check_allocation(result[0]))
+            break
 
 
 if __name__ == "__main__":
@@ -74,16 +81,12 @@ if __name__ == "__main__":
             conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password,
                                     host="localhost",
                                     port=server.local_bind_port)
-
+            curs = conn.cursor()
     except:
-        print("Connection server - Failed")
+        print(time.ctime(), "Connection server - Failed")
 
     else:
-        curs = conn.cursor()
-        daemon_exec(read_redis, action, pathToPID + nameOfPID + '.pid', **out)
-        # read_redis()
+        read_redis()
+        # daemon_exec(read_redis, action, pathToPID + nameOfPID + '.pid', **out)
 
-
-
-
-#subprocess.check_call("sudo /etc/init.d/dhcpd restart", shell=True)
+        # subprocess.check_call("sudo /etc/init.d/dhcpd restart", shell=True)
