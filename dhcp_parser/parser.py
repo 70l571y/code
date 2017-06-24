@@ -12,7 +12,7 @@ path = "/home/sid/PycharmProjects/dhcp/dhcp_parser/dhcpgen.log"
 def process_line(line):
     if 'DHCPOFFER' in line:
         rex = re.search(ip_mac_regexp, line)
-        redis_db.set(rex.group("mac").replace(':', '-'), rex.group("ip"))
+        redis_db.set(rex.group("mac").replace(':', '-').upper(), rex.group("ip"))
 
 
 def process_file():
@@ -51,6 +51,6 @@ if __name__ == '__main__':
         if not os.path.exists(pathToPID):
             os.makedirs(pathToPID)
         out = {'stdout': pathToPID + nameOfPID + '.log'}
-        action = 'stop'
+        action = 'start'
 
         daemon_exec(process_file, action, pathToPID + nameOfPID + '.pid', **out)
