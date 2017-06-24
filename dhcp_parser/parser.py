@@ -7,12 +7,12 @@ from other.daemon import daemon_exec
 
 ip_mac_regexp = r'(([^:]+):){3} ([^ ]+ ){2}(?P<ip>[^ ]+) [^ ]+ (?P<mac>[^ ]+)'
 
-path = "/var/log/dhcpd.log"
+path = "/home/sid/PycharmProjects/dhcp/dhcp_parser/dhcpgen.log"
 
 def process_line(line):
     if 'DHCPOFFER' in line:
         rex = re.search(ip_mac_regexp, line)
-        redis_db.set(rex.group("mac"), rex.group("ip"))
+        redis_db.set(rex.group("mac").replace(':', '-'), rex.group("ip"))
 
 
 def process_file():
@@ -51,6 +51,6 @@ if __name__ == '__main__':
         if not os.path.exists(pathToPID):
             os.makedirs(pathToPID)
         out = {'stdout': pathToPID + nameOfPID + '.log'}
-        action = 'start'
+        action = 'stop'
 
         daemon_exec(process_file, action, pathToPID + nameOfPID + '.pid', **out)
