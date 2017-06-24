@@ -2,10 +2,12 @@ import re
 import redis
 import os
 import time
-
+import sys
+from other.daemon import daemon_exec
 
 ip_mac_regexp = r'(([^:]+):){3} ([^ ]+ ){2}(?P<ip>[^ ]+) [^ ]+ (?P<mac>[^ ]+)'
 
+path = "/var/log/dhcpd.log"
 
 def process_line(line):
     if 'DHCPOFFER' in line:
@@ -13,7 +15,7 @@ def process_line(line):
         redis_db.set(rex.group("mac"), rex.group("ip"))
 
 
-def process_file(path):
+def process_file():
     file_size = os.path.getsize(path)
     try:
         if redis_db.get("file:offset") == None:
@@ -43,5 +45,12 @@ if __name__ == '__main__':
     except (redis.exceptions.ConnectionError, ConnectionRefusedError):
         print("Connection refused - Unable to connect to Redis")
     else:
-        filepath = "/var/log/dhcpd.log"
-        process_file(filepath)
+        sys.path.append("..")
+        pathToPID = '/tmp/roman/daemons/'
+        nameOfPID = 'dhcp_parser'
+        if not os.path.exists(pathToPID):
+            os.makedirs(pathToPID)
+        out = {'stdout': pathToPID + nameOfPID + '.log'}
+        action = 'start'
+
+        daemon_exec(process_file, action, pathToPID + nameOfPID + '.pid', **out)

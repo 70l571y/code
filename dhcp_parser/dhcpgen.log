@@ -52,4 +52,6 @@ Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 243:150:155:173 to a9:e5:44:ae
 Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 55:239:250:113 to 75:ff:d0:43:e2:e4 via 109.226.250.32
 Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 227:108:19:190 to a6:8d:5b:91:bb:7f via 109.226.250.32
 Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 124:237:239:148 to 14:59:c3:62:25:db via 109.226.250.32
-Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 120:195:37:65 to f1:b7:5c:93:90:6c via 109.226.250.32
+Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 120:195:37:65 to f1:b7:5c:93:90:6c via 109.226.250.32Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 204:30:213:118 to d4:a3:93:e0:a0:fa via 109.226.250.32
+Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 153:214:173:72 to ed:3e:b8:79:25:59 via 109.226.250.32
+Apr  4 04:30:01 src@localhost dhcpd: DHCPOFFER on 212:180:170:76 to 3e:dc:3a:37:f6:69 via 109.226.250.32
