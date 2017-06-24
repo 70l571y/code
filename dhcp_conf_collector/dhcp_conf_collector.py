@@ -17,6 +17,7 @@ if not os.path.exists(pathToPID):
 out = {'stdout': pathToPID + nameOfPID + '.log'}
 action = 'start'
 
+
 def sql_request(sql):
     try:
         curs.execute(sql)
@@ -29,11 +30,24 @@ def sql_request(sql):
         rows = curs.fetchone()
         return rows
 
+
+def add_conf_entry(lines):
+    f = open('production.conf', 'a')
+    f.write(lines)
+    f.close()
+
+
 def check_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
-    return result_IP[5]['ip']
-    # сделать булеву проверку на соответствие ip адреса с redish
+    ip_address = result_IP[5]['ip']
+    sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    subnet_id = sql_request(sql_req_subnet_id)
+    sql_req_network_address = "select network from subnets where id={};".format(subnet_id[0])
+    sql_req_gateway = "select gw from subnets where id={};".format(subnet_id[0])
+    network_address = sql_request(sql_req_network_address)
+    gateway_address = sql_request(sql_req_gateway)
+    return ip_address, network_address, gateway_address
 
 
 def check_allocation(mac_address):
@@ -72,25 +86,28 @@ def check_config_file(mac):
 
 
 def main():
-    # print(check_allocation('00-1E-58-A9-01-36'))
-    print(check_config_file('00:23:4d:53:ce:82'))
+    # # print(check_allocation('00-1E-58-A9-01-36'))
+    # print(check_config_file('00:25:11:c3:38:ef'))
+    # print(check_network_settings('00-1E-58-A9-01-36'))
 
-    # redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
-    # try:
-    #     response = redis_db.client_list()
-    # except (redis.exceptions.ConnectionError, ConnectionRefusedError):
-    #     print(time.ctime(), "Connection refused - Unable to connect to Redis")
-    # else:
-    #     mac_regexp = r'((?:[0-9A-F]{2}-){5}[0-9A-F]{2})'
-    #     while True:
-    #         redis_all_keys = redis_db.keys()
-    #         for keys in redis_all_keys:
-    #             redis_current_key = keys.decode('utf-8')
-    #             result = re.findall(mac_regexp, redis_current_key)
-    #             if not result:
-    #                 continue
-    #             if check_allocation(result[0]):
-    #                 print('Fuuuuck yeah!!!!')
+    redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+    try:
+        response = redis_db.client_list()
+    except (redis.exceptions.ConnectionError, ConnectionRefusedError):
+        print(time.ctime(), "Connection refused - Unable to connect to Redis")
+    else:
+        mac_regexp = r'((?:[0-9A-F]{2}-){5}[0-9A-F]{2})'
+        while True:
+            redis_all_keys = redis_db.keys()
+            for keys in redis_all_keys:
+                redis_current_key = keys.decode('utf-8')
+                result = re.findall(mac_regexp, redis_current_key)
+                if not result:
+                    continue
+                if check_allocation(result[0]):
+                    print('Fuuuuck yeah!!!!')
+
+
 
 
 
