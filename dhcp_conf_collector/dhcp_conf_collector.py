@@ -115,7 +115,7 @@ def read_config_file(file):
 
 def check_config_file(mac):
     try:
-        with open('/etc/dhcpd/production.conf') as file_handler:
+        with open(production_config_file) as file_handler:
             for line in read_config_file(file_handler):
                 if mac in line:
                     return True
