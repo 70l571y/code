@@ -32,29 +32,26 @@ def sql_request(sql):
 
 
 def add_conf_entry(lines):
-    f = open('production.conf', 'a')
-    f.write(lines)
-    f.close()
+    config_file = open('production.conf', 'a')
+    config_file.write(lines)
+    config_file.close()
 
 
 def del_conf_entry(mac_address):
     with open('/etc/dhcpd/production.conf', 'r') as dhcpd_conf_file:
-        file = dhcpd_conf_file.readlines()
+        config_file = dhcpd_conf_file.readlines()
         search_entry = "hardware ethernet {} ;".format(mac_address)
-        for i in range(len(file)):
-            if file[i].rstrip("\n") == search_entry:
+        for i in range(len(config_file)):
+            if config_file[i].rstrip("\n") == search_entry:
                 print("есть запись подсети")
                 print(i, '- искомый индекс')
-                print(file[i - 6].rstrip("\n"), '--- начальный индекс')
-                print(file[i + 3].rstrip("\n"), '--- конечный индекс')
+                print(config_file[i - 6].rstrip("\n"), '--- начальный индекс')
+                print(config_file[i + 3].rstrip("\n"), '--- конечный индекс')
                 break
-            elif i == range(len(file)):
-                print('мак адрес не найден')
-                dhcpd_conf_file.close()
 
     with open('/etc/dhcpd/production.conf', 'w') as save_dhcpd_conf_file:
-        del file[i - 6:i + 4]
-        save_dhcpd_conf_file.writelines(file)
+        del config_file[i - 6:i + 4]
+        save_dhcpd_conf_file.writelines(config_file)
 
 
 def check_network_settings(mac_address):
