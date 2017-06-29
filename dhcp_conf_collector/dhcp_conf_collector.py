@@ -38,24 +38,23 @@ def add_conf_entry(lines):
 
 
 def del_conf_entry(mac_address):
-    dhcpd_conf_file = open('production.conf', 'r')
-    search_entry = "hardware ethernet {} ;".format(mac_address)
-    f = dhcpd_conf_file.readlines()
-    for i in range(len(f)):
-        if f[i].rstrip("\n") == search_entry:
-            print("есть запись подсети")
-            print(i, '- искомый индекс')
-            print(f[i - 6].rstrip("\n"), '--- начальный индекс')
-            print(f[i + 3].rstrip("\n"), '--- конечный индекс')
-            dhcpd_conf_file.close()
-            break
-        elif i == range(len(f)):
-            print('мак адрес не найден')
-            dhcpd_conf_file.close()
-    save_dhcpd_conf_file = open('production.conf', 'w')
-    del f[i - 6:i + 4]
-    save_dhcpd_conf_file.writelines(f)
-    save_dhcpd_conf_file.close()
+    with open('/etc/dhcpd/production.conf', 'r') as dhcpd_conf_file:
+        file = dhcpd_conf_file.readlines()
+        search_entry = "hardware ethernet {} ;".format(mac_address)
+        for i in range(len(file)):
+            if file[i].rstrip("\n") == search_entry:
+                print("есть запись подсети")
+                print(i, '- искомый индекс')
+                print(file[i - 6].rstrip("\n"), '--- начальный индекс')
+                print(file[i + 3].rstrip("\n"), '--- конечный индекс')
+                break
+            elif i == range(len(file)):
+                print('мак адрес не найден')
+                dhcpd_conf_file.close()
+
+    with open('/etc/dhcpd/production.conf', 'w') as save_dhcpd_conf_file:
+        del file[i - 6:i + 4]
+        save_dhcpd_conf_file.writelines(file)
 
 
 def check_network_settings(mac_address):
@@ -95,7 +94,7 @@ def read_config_file(file):
 
 def check_config_file(mac):
     try:
-        with open('production.conf') as file_handler:
+        with open('/etc/dhcpd/production.conf') as file_handler:
             for line in read_config_file(file_handler):
                 if mac in line:
                     return True
