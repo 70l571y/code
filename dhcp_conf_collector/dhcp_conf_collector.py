@@ -37,6 +37,27 @@ def add_conf_entry(lines):
     f.close()
 
 
+def del_conf_entry(mac_address):
+    dhcpd_conf_file = open('production.conf', 'r')
+    search_entry = "hardware ethernet {} ;".format(mac_address)
+    f = dhcpd_conf_file.readlines()
+    for i in range(len(f)):
+        if f[i].rstrip("\n") == search_entry:
+            print("есть запись подсети")
+            print(i, '- искомый индекс')
+            print(f[i - 6].rstrip("\n"), '--- начальный индекс')
+            print(f[i + 3].rstrip("\n"), '--- конечный индекс')
+            dhcpd_conf_file.close()
+            break
+        elif i == range(len(f)):
+            print('мак адрес не найден')
+            dhcpd_conf_file.close()
+    save_dhcpd_conf_file = open('production.conf', 'w')
+    del f[i - 6:i + 4]
+    save_dhcpd_conf_file.writelines(f)
+    save_dhcpd_conf_file.close()
+
+
 def check_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
@@ -79,14 +100,12 @@ def check_config_file(mac):
                 if mac in line:
                     return True
             return False
-
-            # return False
     except (IOError, OSError):
         print("Error opening / processing file")
 
 
 def main():
-    # # print(check_allocation('00-1E-58-A9-01-36'))
+    # print(check_allocation('00-1E-58-A9-01-36'))
     # print(check_config_file('00:25:11:c3:38:ef'))
     # print(check_network_settings('00-1E-58-A9-01-36'))
 
@@ -106,9 +125,6 @@ def main():
                     continue
                 if check_allocation(result[0]):
                     print('Fuuuuck yeah!!!!')
-
-
-
 
 
 if __name__ == "__main__":
