@@ -41,10 +41,11 @@ def sql_request(sql):
 
 def add_conf_entry(mac_address):
     network_settings = get_network_settings(mac_address)
+    reverse_ip = network_settings[0].replace('.', ',')
     write_entry = "subnet " + network_settings[1] + " netmask " + network_settings[
         2] + " {\nauthoritative;\noption routers 109.226.250.11;\n" \
-             "deny unknown-clients;\noption rfc3442-classless-static-routes 24,109,226,250,172,27,22,202;\n" \
-             "host krk250981 {\nhardware ethernet 00:25:11:c3:38:ef ;\nfixed-address " + \
+             "deny unknown-clients;\noption rfc3442-classless-static-routes 24,109,226,250," + reverse_ip + ";\n" \
+                                                                                                            "host krk250981 {\nhardware ethernet 00:25:11:c3:38:ef ;\nfixed-address " + \
                   network_settings[0] + " ;\n}\n}\n}"
     with open(production_config_file, 'r') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
@@ -54,7 +55,6 @@ def add_conf_entry(mac_address):
         save_dhcpd_conf_file.writelines(config_file)
         reboot_dhcp_server()
 
-    # Разбей ip адрес на октеты!!! и добавь это безобразие в переменную write_entry
     #доделать через with open с ребутом ДХЦП
 
 
