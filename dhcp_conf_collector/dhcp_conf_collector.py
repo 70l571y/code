@@ -33,7 +33,16 @@ def sql_request(sql):
 
 def add_conf_entry(mac_address):
     network_settings = get_network_settings(mac_address)
-    write_entry = ""
+    write_entry = write_entry = '''subnet {} netmask {} {
+authoritative;
+option routers 109.226.250.11;
+deny unknown-clients;
+option rfc3442-classless-static-routes 24,109,226,250,172,27,22,202;
+host krk250981 {
+hardware ethernet 00:25:11:c3:38:ef ;
+fixed-address {} ;
+}
+}'''.format(network_settings[1], network_settings[2], network_settings[0])
     with open('/etc/dhcpd/production.conf', 'w') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
         config_file.append(write_entry)
