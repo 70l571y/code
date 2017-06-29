@@ -35,6 +35,7 @@ def add_conf_entry(lines):
     config_file = open('production.conf', 'a')
     config_file.write(lines)
     config_file.close()
+    #доделать через with open с ребутом ДХЦП
 
 
 def del_conf_entry(mac_address):
