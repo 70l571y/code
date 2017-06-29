@@ -10,12 +10,19 @@ import sys
 import subprocess
 
 sys.path.append("..")
+
+production_config_file = '/etc/dhcpd/production.conf'
+
 pathToPID = '/tmp/roman/daemons/'
 nameOfPID = 'conf_collector'
 if not os.path.exists(pathToPID):
     os.makedirs(pathToPID)
 out = {'stdout': pathToPID + nameOfPID + '.log'}
 action = 'start'
+
+
+def reboot_dhcp_server():
+    subprocess.call(["/etc/init.d/dhcpd", "restart"])
 
 
 def sql_request(sql):
@@ -38,9 +45,13 @@ def add_conf_entry(mac_address):
              "deny unknown-clients;\noption rfc3442-classless-static-routes 24,109,226,250,172,27,22,202;\n" \
              "host krk250981 {\nhardware ethernet 00:25:11:c3:38:ef ;\nfixed-address " + \
                   network_settings[2] + " ;\n}\n}\n}"
-    with open('/etc/dhcpd/production.conf', 'w') as dhcpd_conf_file:
+    with open(production_config_file, 'r') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
+
+    with open(production_config_file, 'w') as save_dhcpd_conf_file:
         config_file.append(write_entry)
+        save_dhcpd_conf_file.writelines(config_file)
+        reboot_dhcp_server()
 
 
     #доделать через with open с ребутом ДХЦП
@@ -48,7 +59,7 @@ def add_conf_entry(mac_address):
 
 def del_conf_entry(mac_address):
     try:
-        with open('/etc/dhcpd/production.conf', 'r') as dhcpd_conf_file:
+        with open(production_config_file, 'r') as dhcpd_conf_file:
             config_file = dhcpd_conf_file.readlines()
             search_entry = "hardware ethernet {} ;".format(mac_address)
             for i in range(len(config_file)):
@@ -59,10 +70,10 @@ def del_conf_entry(mac_address):
                     print(config_file[i + 3].rstrip("\n"), '--- конечный индекс')
                     break
 
-        with open('/etc/dhcpd/production.conf', 'w') as save_dhcpd_conf_file:
+        with open(production_config_file, 'w') as save_dhcpd_conf_file:
             del config_file[i - 6:i + 4]
             save_dhcpd_conf_file.writelines(config_file)
-            subprocess.call(["/etc/init.d/dhcpd", "restart"])
+            reboot_dhcp_server()
     except (IOError, OSError):
         print("Error opening / processing file")
 
