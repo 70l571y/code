@@ -7,7 +7,7 @@ import os
 from other.daemon import daemon_exec
 import time
 import sys
-#import subprocess
+import subprocess
 
 sys.path.append("..")
 pathToPID = '/tmp/roman/daemons/'
@@ -38,20 +38,23 @@ def add_conf_entry(lines):
 
 
 def del_conf_entry(mac_address):
-    with open('/etc/dhcpd/production.conf', 'r') as dhcpd_conf_file:
-        config_file = dhcpd_conf_file.readlines()
-        search_entry = "hardware ethernet {} ;".format(mac_address)
-        for i in range(len(config_file)):
-            if config_file[i].rstrip("\n") == search_entry:
-                print("есть запись подсети")
-                print(i, '- искомый индекс')
-                print(config_file[i - 6].rstrip("\n"), '--- начальный индекс')
-                print(config_file[i + 3].rstrip("\n"), '--- конечный индекс')
-                break
+    try:
+        with open('/etc/dhcpd/production.conf', 'r') as dhcpd_conf_file:
+            config_file = dhcpd_conf_file.readlines()
+            search_entry = "hardware ethernet {} ;".format(mac_address)
+            for i in range(len(config_file)):
+                if config_file[i].rstrip("\n") == search_entry:
+                    print("есть запись подсети")
+                    print(i, '- искомый индекс')
+                    print(config_file[i - 6].rstrip("\n"), '--- начальный индекс')
+                    print(config_file[i + 3].rstrip("\n"), '--- конечный индекс')
+                    break
 
-    with open('/etc/dhcpd/production.conf', 'w') as save_dhcpd_conf_file:
-        del config_file[i - 6:i + 4]
-        save_dhcpd_conf_file.writelines(config_file)
+        with open('/etc/dhcpd/production.conf', 'w') as save_dhcpd_conf_file:
+            del config_file[i - 6:i + 4]
+            save_dhcpd_conf_file.writelines(config_file)
+    except (IOError, OSError):
+        print("Error opening / processing file")
 
 
 def check_network_settings(mac_address):
