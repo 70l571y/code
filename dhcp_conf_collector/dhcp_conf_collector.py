@@ -9,10 +9,11 @@ import time
 import sys
 import subprocess
 
-sys.path.append("..")
 
 production_config_file = '/etc/dhcpd/production.conf'
 
+#daemon settings
+sys.path.append("..")
 pathToPID = '/tmp/roman/daemons/'
 nameOfPID = 'conf_collector'
 if not os.path.exists(pathToPID):
@@ -44,7 +45,7 @@ def add_conf_entry(mac_address):
         2] + " {\nauthoritative;\noption routers 109.226.250.11;\n" \
              "deny unknown-clients;\noption rfc3442-classless-static-routes 24,109,226,250,172,27,22,202;\n" \
              "host krk250981 {\nhardware ethernet 00:25:11:c3:38:ef ;\nfixed-address " + \
-                  network_settings[2] + " ;\n}\n}\n}"
+                  network_settings[0] + " ;\n}\n}\n}"
     with open(production_config_file, 'r') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
 
@@ -53,7 +54,7 @@ def add_conf_entry(mac_address):
         save_dhcpd_conf_file.writelines(config_file)
         reboot_dhcp_server()
 
-
+    # Разбей ip адрес на октеты!!! и добавь это безобразие в переменную write_entry
     #доделать через with open с ребутом ДХЦП
 
 
