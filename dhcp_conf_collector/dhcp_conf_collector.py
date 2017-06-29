@@ -31,10 +31,14 @@ def sql_request(sql):
         return rows
 
 
-def add_conf_entry(lines):
-    config_file = open('production.conf', 'a')
-    config_file.write(lines)
-    config_file.close()
+def add_conf_entry(mac_address):
+    network_settings = get_network_settings(mac_address)
+    write_entry = ""
+    with open('/etc/dhcpd/production.conf', 'w') as dhcpd_conf_file:
+        config_file = dhcpd_conf_file.readlines()
+        config_file.append(write_entry)
+
+
     #доделать через with open с ребутом ДХЦП
 
 
@@ -54,11 +58,12 @@ def del_conf_entry(mac_address):
         with open('/etc/dhcpd/production.conf', 'w') as save_dhcpd_conf_file:
             del config_file[i - 6:i + 4]
             save_dhcpd_conf_file.writelines(config_file)
+            subprocess.call(["/etc/init.d/dhcpd", "restart"])
     except (IOError, OSError):
         print("Error opening / processing file")
 
 
-def check_network_settings(mac_address):
+def get_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
     ip_address = result_IP[5]['ip']
@@ -107,7 +112,7 @@ def check_config_file(mac):
 def main():
     # print(check_allocation('00-1E-58-A9-01-36'))
     # print(check_config_file('00:25:11:c3:38:ef'))
-    # print(check_network_settings('00-1E-58-A9-01-36'))
+    # print(get_network_settings('00-1E-58-A9-01-36'))
 
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
@@ -125,6 +130,12 @@ def main():
                     continue
                 if check_allocation(result[0]):
                     print('Fuuuuck yeah!!!!')
+
+                elif check_config_file(result[0]):
+                    del_conf_entry(result[0])
+                    continue
+                else:
+                    continue
 
 
 if __name__ == "__main__":
