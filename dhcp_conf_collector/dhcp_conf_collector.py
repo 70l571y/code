@@ -134,9 +134,9 @@ def del_conf_entry(mac_address):
 def get_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
-    # sql_req_models_name = ""
-    # result_models_name = sql_request((sql_req_models_name))
-    # models_name = result_models_name
+    # sql_req_models_name = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    # result_models_name = sql_request((sql_req_models_name)
+    # models_name = result_models_name[0]
     ip_address = result_IP[5]['ip']
     sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
