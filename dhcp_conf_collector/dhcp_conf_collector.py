@@ -154,7 +154,8 @@ def search_mac_address_on_config_file(mac):
         search_mac_address = "hardware ethernet " + mac + ";\n"
         with open(production_config_file) as file_handler:
             config_file = file_handler.readlines()
-            if search_mac_address in config_file: return True
+            if search_mac_address in config_file:
+                return True
             else:
                 return False
     except (IOError, OSError):
