@@ -1,3 +1,33 @@
+"""
+    1) Берет i-й мак адрес с БД Редис
+    2) Ищет свитч по мак адресу (взятый с редиса) в базе switches
+        2.1) Если свитча в данной базе нет, то ищет данный свитч в DHCP конфиге по мак адресу
+        2.2) Если свитч есть в DHCP конфиге (которого нет в базе), то удалаяет данную запись,
+            перезагрузает DHCP сервер и переходит в п.1)
+    3) Если свитч в продакшине, то смотрит есть ли в DHCP конфиге запись с данным мак адресом
+        3.1) Если свитч не в продакшине, то ищет данный свитч в DHCP конфиге по мак адресу
+        3.2) Если свитч есть в DHCP конфиге (которого нет в базе), то удалаяет данную запись,
+            перезагрузает DHCP сервер и переходит в п.1)
+        3.3) Если свитча нет в DHCP конфиге, то переходит в п.1)
+    4) Если запись в DHCP конфиге есть, то сравнивает его сетевые настройки
+        4.1) Если записи с данный мак адресом в DHCP конфиге нет, то добавляет данную запись
+            и перезагрузает DHCP сервер
+    5) Если настройки верные, то переходит в п.1)
+        5.1) Если настройки неверные, то удаляет данную запись и добавляет новую запись с
+            верными сетевыми настройками и перезагрузает DHCP сервер
+
+    Используемые функции:
+    reboot_dhcp_server - перезагрузка DHCP сервера
+    sql_request - запрос в БД по заданному sql запросу извне и возвращение ответа от базы
+    add_conf_entry - добавление записи в конфиг DHCP сервера по заданному мак адресу из БД
+    del_conf_entry - удаление записи из конфига DHCP сервера по заданному мак адресу
+    get_network_settings - получение сетевых настроек хоста из базы по заданному мак адресу
+    check_allocation - проверка есть ли свитч в продакшине
+    read_config_file - итератор для считывания конфиг файла DHCP серера построчно
+    search_mac_address_on_config_file - поиск заданного мак адреса в конфиге DHCP сервера
+    main - бесконечное считывания мак адресов с БД Редис
+    """
+
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
 import json
@@ -12,6 +42,12 @@ import ipaddress
 
 
 production_config_file = '/etc/dhcpd/production.conf'
+
+#configs and firmwares settings
+tftp_server_name = '80.65.17.254'
+dlink_dgs_1210_28_me_b1_config_bootfile_name = 'cfg1210.cfg'
+option_150 = tftp_server_name
+
 
 #daemon settings
 sys.path.append("..")
@@ -51,10 +87,11 @@ def add_conf_entry(mac_address):
     host_models_name = network_settings[4]
     ip = ipaddress.IPv4Network(host_network)
 
-    write_entry = "subnet " + host_network[0][:-3] + "netmask " + str(ip.netmask) + " {\n" \
-                  "authoritative;\noption routers " + host_gateway[2] + ";\n" \
-                  "option tftp-server-name \"80.65.17.254\";\noption bootfile-name \"cfg1210.cfg\";\n" \
-                  "option option-150 80.65.17.254;\nhost DGS-1210-28-ME-B1-a40d {\n" \
+    write_entry = "subnet " + host_network[:-3] + " netmask " + str(ip.netmask) + " {\n" \
+                  "authoritative;\noption routers " + host_gateway + ";\n" \
+                  "option tftp-server-name \"" + tftp_server_name + "\";\noption bootfile-name \"" + \
+                  dlink_dgs_1210_28_me_b1_config_bootfile_name + "\";\n" \
+                  "option option-150 " + option_150 + ";\nhost " + host_models_name + " {\n" \
                   "hardware ethernet " + host_mac_address + ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
 
     with open(production_config_file, 'r') as dhcpd_conf_file:
@@ -73,10 +110,6 @@ def del_conf_entry(mac_address):
             search_entry = "hardware ethernet {} ;".format(mac_address)
             for i in range(len(config_file)):
                 if config_file[i].rstrip("\n") == search_entry:
-                    print("есть запись подсети")
-                    print(i, '- искомый индекс')
-                    print(config_file[i - 6].rstrip("\n"), '--- начальный индекс')
-                    print(config_file[i + 3].rstrip("\n"), '--- конечный индекс')
                     break
 
         with open(production_config_file, 'w') as save_dhcpd_conf_file:
@@ -125,7 +158,7 @@ def read_config_file(file):
         yield data
 
 
-def check_config_file(mac):
+def search_mac_address_on_config_file(mac):
     try:
         with open(production_config_file) as file_handler:
             for line in read_config_file(file_handler):
@@ -137,11 +170,6 @@ def check_config_file(mac):
 
 
 def main():
-    '''adsffd'''
-    # print(check_allocation('00-1E-58-A9-01-36'))
-    # print(check_config_file('00:25:11:c3:38:ef'))
-    # print(get_network_settings('00-1E-58-A9-01-36'))
-
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
         response = redis_db.client_list()
@@ -159,7 +187,7 @@ def main():
                 if check_allocation(result[0]):
                     print('Fuuuuck yeah!!!!')
 
-                elif check_config_file(result[0]):
+                elif search_mac_address_on_config_file(result[0]):
                     del_conf_entry(result[0])
                     continue
                 else:
