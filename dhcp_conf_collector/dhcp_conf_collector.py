@@ -23,7 +23,6 @@
     del_conf_entry - удаление записи из конфига DHCP сервера по заданному мак адресу
     get_network_settings - получение сетевых настроек хоста из базы по заданному мак адресу
     check_allocation - проверка есть ли свитч в продакшине
-    read_config_file - итератор для считывания конфиг файла DHCP серера построчно
     search_mac_address_on_config_file - поиск заданного мак адреса в конфиге DHCP сервера
     main - бесконечное считывания мак адресов с БД Редис
     """
@@ -150,21 +149,14 @@ def check_allocation(mac_address):
         return True if result_city[2] == 1 else False
 
 
-def read_config_file(file):
-    while True:
-        data = file.readline()
-        if not data:
-            break
-        yield data
-
-
 def search_mac_address_on_config_file(mac):
     try:
+        search_mac_address = "hardware ethernet " + mac + ";\n"
         with open(production_config_file) as file_handler:
-            for line in read_config_file(file_handler):
-                if mac in line:
-                    return True
-            return False
+            config_file = file_handler.readlines()
+            if search_mac_address in config_file: return True
+            else:
+                return False
     except (IOError, OSError):
         print("Error opening / processing file")
 
