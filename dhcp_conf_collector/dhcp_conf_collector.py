@@ -8,6 +8,7 @@ from other.daemon import daemon_exec
 import time
 import sys
 import subprocess
+import ipaddress
 
 
 production_config_file = '/etc/dhcpd/production.conf'
@@ -41,12 +42,22 @@ def sql_request(sql):
 
 def add_conf_entry(mac_address):
     network_settings = get_network_settings(mac_address)
-    write_entry = "subnet " + network_settings[1] + " netmask " + network_settings[
-        2] + " {\nauthoritative;\noption routers 109.226.250.11;\n" \
-             "deny unknown-clients;\noption rfc3442-classless-static-routes 24,109,226,250," + network_settings[
-                      0].replace('.', ',') + ";\n" \
-                                             "host krk250981 {\nhardware ethernet 00:25:11:c3:38:ef ;\nfixed-address " + \
-                  network_settings[0] + " ;\n}\n}\n}"
+    #network_settings = ['172.27.22.0/24', '172.27.22.203', '172.27.22.254', '90:8d:78:d0:a4:0d']
+    # return network_address, ip_address, gateway_address, mac_address, models_name
+
+    host_network = network_settings[0]
+    host_ip_address = network_settings[1]
+    host_gateway = network_settings[2]
+    host_mac_address = network_settings[3]
+    host_models_name = network_settings[4]
+    ip = ipaddress.IPv4Network(host_network)
+
+    write_entry = "subnet " + host_network[0][:-3] + "netmask " + str(ip.netmask) + " {\n" \
+                  "authoritative;\noption routers " + host_gateway[2] + ";\n" \
+                  "option tftp-server-name \"80.65.17.254\";\noption bootfile-name \"cfg1210.cfg\";\n" \
+                  "option option-150 80.65.17.254;\nhost DGS-1210-28-ME-B1-a40d {\n" \
+                  "hardware ethernet " + host_mac_address + ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
+
     with open(production_config_file, 'r') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
 
@@ -80,6 +91,9 @@ def del_conf_entry(mac_address):
 def get_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
+    # sql_req_models_name = ""
+    # result_models_name = sql_request((sql_req_models_name))
+    # models_name = result_models_name
     ip_address = result_IP[5]['ip']
     sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
@@ -87,7 +101,7 @@ def get_network_settings(mac_address):
     sql_req_gateway = "select gw from subnets where id={};".format(subnet_id[0])
     network_address = sql_request(sql_req_network_address)
     gateway_address = sql_request(sql_req_gateway)
-    return ip_address, network_address, gateway_address
+    return network_address, ip_address, gateway_address, mac_address, models_name
 
 
 def check_allocation(mac_address):
@@ -124,7 +138,7 @@ def check_config_file(mac):
 
 
 def main():
-    ''''''
+    '''adsffd'''
     # print(check_allocation('00-1E-58-A9-01-36'))
     # print(check_config_file('00:25:11:c3:38:ef'))
     # print(get_network_settings('00-1E-58-A9-01-36'))
