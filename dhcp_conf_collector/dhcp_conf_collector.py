@@ -134,9 +134,12 @@ def del_conf_entry(mac_address):
 def get_network_settings(mac_address):
     sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_IP = sql_request(sql_req_IP)
-    # sql_req_models_name = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
-    # result_models_name = sql_request((sql_req_models_name)
-    # models_name = result_models_name[0]
+    sql_req_models_id = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    result_models_id = sql_request(sql_req_models_id)
+    models_id = result_models_id[0]
+    sql_req_models_name = "select data from models where id=" + str(models_id) + ";"
+    result_models_name = sql_request(sql_req_models_name)
+    models_name = result_models_name[0]['name']
     ip_address = result_IP[5]['ip']
     sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
@@ -144,7 +147,7 @@ def get_network_settings(mac_address):
     sql_req_gateway = "select gw from subnets where id={};".format(subnet_id[0])
     network_address = sql_request(sql_req_network_address)
     gateway_address = sql_request(sql_req_gateway)
-    return network_address, ip_address, gateway_address, mac_address, models_name
+    return network_address[0], ip_address, gateway_address[0], mac_address, models_name
 
 
 def checking_for_network_settings_matches(mac_address):
@@ -174,9 +177,9 @@ def check_allocation(mac_address):
         return True if result_city[2] == 1 else False
 
 
-def search_mac_address_on_config_file(mac):
+def search_mac_address_on_config_file(mac_address):
     try:
-        search_mac_address = "hardware ethernet " + mac + ";\n"
+        search_mac_address = "hardware ethernet " + mac_address + ";\n"
         with open(production_config_file) as file_handler:
             config_file = file_handler.readlines()
             if search_mac_address in config_file:
@@ -202,13 +205,15 @@ def main():
                 result = re.findall(mac_regexp, redis_current_key)
                 if not result:
                     continue
-                if check_allocation(result[0]) and search_mac_address_on_config_file(result[0]):
-
-                elif search_mac_address_on_config_file(result[0]):
-                    del_conf_entry(result[0])
-                    continue
-                else:
-                    continue
+                net_settings = get_network_settings('00-1F-CE-23-59-89')
+                print(net_settings)
+                # if check_allocation(result[0]) and search_mac_address_on_config_file(result[0]):
+                #
+                # elif search_mac_address_on_config_file(result[0]):
+                #     del_conf_entry(result[0])
+                #     continue
+                # else:
+                #     continue
 
 
 if __name__ == "__main__":
