@@ -42,11 +42,10 @@ production_config_file = '/etc/dhcpd/production.conf'
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
-# config_bootfile_name = 'cfg1210.cfg' #сделать проверку по model_name и каждому model_name дать свой конфиг
 option_150 = tftp_server_name
 
 
-#daemon settings
+# daemon settings
 sys.path.append("..")
 pathToPID = '/tmp/roman/daemons/'
 nameOfPID = 'conf_collector'
@@ -68,7 +67,7 @@ def config_entry(mac_address):
     network_settings = get_network_settings(mac_address)
     host_ip_address = network_settings[1]
     host_gateway = network_settings[2]
-    host_mac_address = network_settings[3]
+    host_mac_address = network_settings[3].lower()
     host_models_name = network_settings[4]
     host_network = str(ipaddress.IPv4Network(
         network_settings[0]).network_address)
@@ -102,26 +101,13 @@ def sql_request(sql):
 
 
 def add_conf_entry(mac_address):
-    # network_settings = get_network_settings(mac_address)
-    # host_network = network_settings[0]
-    # host_ip_address = network_settings[1]
-    # host_gateway = network_settings[2]
-    # host_mac_address = network_settings[3]
-    # host_models_name = network_settings[4]
-    # ip = ipaddress.IPv4Network(host_network)
-    #
-    # write_entry = "subnet " + host_network[:-3] + " netmask " + str(ip.netmask) + " {\n" \
-    #               "authoritative;\noption routers " + host_gateway + ";\n" \
-    #               "option tftp-server-name \"" + tftp_server_name + "\";\noption bootfile-name \"" + \
-    #               dlink_dgs_1210_28_me_b1_config_bootfile_name + "\";\n" \
-    #               "option option-150 " + option_150 + ";\nhost " + host_models_name + " {\n" \
-    #               "hardware ethernet " + host_mac_address + ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
     host_entry = config_entry(mac_address)
 
     with open(production_config_file, 'r') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
 
     with open(production_config_file, 'w') as save_dhcpd_conf_file:
+        del config_file[len(config_file) - 1]  # удалить лишнюю фигурную скобку в конце
         config_file.append(host_entry)
         save_dhcpd_conf_file.writelines(config_file)
         reboot_dhcp_server()
@@ -135,7 +121,6 @@ def del_conf_entry(mac_address):
             for i in range(len(config_file)):
                 if config_file[i].rstrip() == search_entry:
                     break
-
         with open(production_config_file, 'w') as save_dhcpd_conf_file:
             del config_file[i - 6:i + 4]
             save_dhcpd_conf_file.writelines(config_file)
@@ -219,8 +204,8 @@ def main():
                 if not result:
                     continue
                 net_settings = get_network_settings('10-BE-F5-55-DC-C2')
-                # print(net_settings)
-                print(config_entry('10-BE-F5-55-DC-C2'))
+                print(net_settings)
+                # print(config_entry('10-BE-F5-55-DC-C2'))
                 # if check_allocation(result[0]) and search_mac_address_on_config_file(result[0]):
                 #
                 # elif search_mac_address_on_config_file(result[0]):
