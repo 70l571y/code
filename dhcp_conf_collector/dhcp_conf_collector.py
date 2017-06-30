@@ -32,8 +32,7 @@ def sql_request(sql):
         curs.execute(sql)
     except (psycopg2.Error) as error:
         print(error)
-        print(time.ctime(), '- В базе данных нет такого устройства, или некорректен следующий запрос:')
-        print(sql)
+        print(time.ctime(), '- В базе данных нет такого устройства, или некорректен следующий запрос:\n', sql)
         return 0
     else:
         rows = curs.fetchone()
