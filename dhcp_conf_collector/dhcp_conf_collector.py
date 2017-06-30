@@ -40,9 +40,9 @@ import ipaddress
 
 production_config_file = '/etc/dhcpd/production.conf'
 
-#configs and firmwares settings
+# configs and firmwares settings
 tftp_server_name = '80.65.17.254'
-dlink_dgs_1210_28_me_b1_config_bootfile_name = 'cfg1210.cfg'
+# config_bootfile_name = 'cfg1210.cfg' #сделать проверку по model_name и каждому model_name дать свой конфиг
 option_150 = tftp_server_name
 
 
@@ -55,22 +55,35 @@ if not os.path.exists(pathToPID):
 out = {'stdout': pathToPID + nameOfPID + '.log'}
 action = 'start'
 
+
+def get_config_file_name(model_name):
+    # для каждой модели следует написать свой конфиг
+    bootfile_name = ""
+    if model_name == 'DGS-1210-28/ME':
+        bootfile_name = "cfg1210.cfg"
+    return bootfile_name
+
+
 def config_entry(mac_address):
     network_settings = get_network_settings(mac_address)
-    host_network = network_settings[0]
     host_ip_address = network_settings[1]
     host_gateway = network_settings[2]
     host_mac_address = network_settings[3]
     host_models_name = network_settings[4]
-    ip = ipaddress.IPv4Network(host_network)
+    host_network = str(ipaddress.IPv4Network(
+        network_settings[0]).network_address)
+    ip_netmask = str(ipaddress.IPv4Network(network_settings[0]).netmask)
+    config_bootfile_name = get_config_file_name(host_models_name)
 
-    write_entry = "subnet " + host_network[:-3] + " netmask " + str(ip.netmask) + " {\n" \
+    write_entry = "subnet " + host_network + " netmask " + ip_netmask + " {\n" \
                   "authoritative;\noption routers " + host_gateway + ";\n" \
                   "option tftp-server-name \"" + tftp_server_name + "\";\noption bootfile-name \"" + \
-                  dlink_dgs_1210_28_me_b1_config_bootfile_name + "\";\n" \
+                  config_bootfile_name + "\";\n" \
                   "option option-150 " + option_150 + ";\nhost " + host_models_name + " {\n" \
-                  "hardware ethernet " + host_mac_address + ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
+                  "hardware ethernet " + host_mac_address + \
+        ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
     return write_entry
+
 
 def reboot_dhcp_server():
     subprocess.call(["/etc/init.d/dhcpd", "restart"])
@@ -132,15 +145,15 @@ def del_conf_entry(mac_address):
 
 
 def get_network_settings(mac_address):
-    sql_req_IP = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
-    result_IP = sql_request(sql_req_IP)
+    sql_req_ip = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    result_ip = sql_request(sql_req_ip)
     sql_req_models_id = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     result_models_id = sql_request(sql_req_models_id)
     models_id = result_models_id[0]
     sql_req_models_name = "select data from models where id=" + str(models_id) + ";"
     result_models_name = sql_request(sql_req_models_name)
     models_name = result_models_name[0]['name']
-    ip_address = result_IP[5]['ip']
+    ip_address = result_ip[5]['ip']
     sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
     sql_req_network_address = "select network from subnets where id={};".format(subnet_id[0])
@@ -205,8 +218,9 @@ def main():
                 result = re.findall(mac_regexp, redis_current_key)
                 if not result:
                     continue
-                net_settings = get_network_settings('00-1F-CE-23-59-89')
-                print(net_settings)
+                net_settings = get_network_settings('10-BE-F5-55-DC-C2')
+                # print(net_settings)
+                print(config_entry('10-BE-F5-55-DC-C2'))
                 # if check_allocation(result[0]) and search_mac_address_on_config_file(result[0]):
                 #
                 # elif search_mac_address_on_config_file(result[0]):
