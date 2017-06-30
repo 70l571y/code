@@ -120,7 +120,7 @@ def del_conf_entry(mac_address):
             config_file = dhcpd_conf_file.readlines()
             search_entry = "hardware ethernet {} ;".format(mac_address)
             for i in range(len(config_file)):
-                if config_file[i].rstrip("\n") == search_entry:
+                if config_file[i].rstrip() == search_entry:
                     break
 
         with open(production_config_file, 'w') as save_dhcpd_conf_file:
@@ -202,8 +202,7 @@ def main():
                 result = re.findall(mac_regexp, redis_current_key)
                 if not result:
                     continue
-                if check_allocation(result[0]):
-                    print('Fuuuuck yeah!!!!')
+                if check_allocation(result[0]) and search_mac_address_on_config_file(result[0]):
 
                 elif search_mac_address_on_config_file(result[0]):
                     del_conf_entry(result[0])
