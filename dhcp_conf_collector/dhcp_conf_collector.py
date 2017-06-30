@@ -154,10 +154,13 @@ def checking_for_network_settings_matches(mac_address):
     with open('dhcp_conf_prod.conf', 'r') as dhcpd_conf_file:
         search_mac_address = "hardware ethernet " + mac_address + ";\n"
         config_file = dhcpd_conf_file.readlines()
-        if search_mac_address_on_config_file:
+        host_entry = config_entry(mac_address)
+        if search_mac_address_on_config_file in config_file:
             found_entry = ''.join(f[f.index(search_mac_address) - 7: f.index(search_mac_address) + 2])
-            if write_entry[:-5] == found_entry:
-                print('yeah baby')
+            if host_entry[:-5] == found_entry:
+                return True
+            else:
+                return False
 
 
 def check_allocation(mac_address):
