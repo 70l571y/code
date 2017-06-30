@@ -14,6 +14,7 @@
             верными сетевыми настройками и перезагрузает DHCP сервер
 
     Используемые функции:
+    get_config_file_name - получение названия файла конфигурации модели для ф-ии config_entry
     config_entry - сформированная запись в конфиг DHCP сервера
     reboot_dhcp_server - перезагрузка DHCP сервера
     sql_request - запрос в БД по заданному sql запросу извне и возвращение ответа от базы
@@ -23,7 +24,7 @@
     check_allocation - проверка есть ли свитч в продакшине
     search_mac_address_on_config_file - поиск заданного мак адреса в конфиге DHCP сервера
     main - бесконечное считывания мак адресов с БД Редис
-    """
+"""
 
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
@@ -189,6 +190,8 @@ def search_mac_address_on_config_file(mac_address):
 
 
 def main():
+    # возможно стоит перезагружать ДЗЦП сервер отсюда после того как прошел по редису весь цикл
+    # и записал изсенения в конфиг
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
         response = redis_db.client_list()
@@ -236,5 +239,3 @@ if __name__ == "__main__":
     # else:
     #     main()
         # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
-
-        # subprocess.check_call("sudo /etc/init.d/dhcpd restart", shell=True)
