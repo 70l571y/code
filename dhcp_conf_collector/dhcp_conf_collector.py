@@ -66,7 +66,7 @@ def get_config_file_name(model_name):
 
 
 def config_entry(mac_address):
-    network_settings = get_network_settings(mac_address)
+    network_settings = get_network_settings(mac_address.lower())
     host_ip_address = network_settings[1]
     host_gateway = network_settings[2]
     host_mac_address = network_settings[3].lower()
@@ -103,7 +103,7 @@ def sql_request(sql):
 
 
 def add_conf_entry(mac_address):
-    host_entry = config_entry(mac_address)
+    host_entry = config_entry(mac_address.lower().replace('-', ':'))
 
     with open(production_config_file, 'r') as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
@@ -112,49 +112,47 @@ def add_conf_entry(mac_address):
         del config_file[len(config_file) - 1]  # удалить лишнюю фигурную скобку в конце
         config_file.append(host_entry)
         save_dhcpd_conf_file.writelines(config_file)
-        reboot_dhcp_server()
 
 
 def del_conf_entry(mac_address):
     try:
         with open(production_config_file, 'r') as dhcpd_conf_file:
             config_file = dhcpd_conf_file.readlines()
-            search_entry = "hardware ethernet {};".format(mac_address.lower())
+            search_entry = "hardware ethernet {};".format(mac_address.lower().replace('-', ':'))
             for i in range(len(config_file)):
                 if config_file[i].rstrip() == search_entry:
                     break
         with open(production_config_file, 'w') as save_dhcpd_conf_file:
             del config_file[i - 8:i + 3]
             save_dhcpd_conf_file.writelines(config_file)
-            reboot_dhcp_server()
     except (IOError, OSError):
         print("Error opening / processing file")
 
 
 def get_network_settings(mac_address):
-    sql_req_ip = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    sql_req_ip = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     result_ip = sql_request(sql_req_ip)
-    sql_req_models_id = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    sql_req_models_id = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     result_models_id = sql_request(sql_req_models_id)
     models_id = result_models_id[0]
     sql_req_models_name = "select data from models where id=" + str(models_id) + ";"
     result_models_name = sql_request(sql_req_models_name)
     models_name = result_models_name[0]['name']
     ip_address = result_ip[5]['ip']
-    sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
     sql_req_network_address = "select network from subnets where id={};".format(subnet_id[0])
     sql_req_gateway = "select gw from subnets where id={};".format(subnet_id[0])
     network_address = sql_request(sql_req_network_address)
     gateway_address = sql_request(sql_req_gateway)
-    return network_address[0], ip_address, gateway_address[0], mac_address, models_name
+    return network_address[0], ip_address, gateway_address[0], mac_address.lower().replace('-', ':'), models_name
 
 
 def checking_for_network_settings_matches(mac_address):
-    with open('dhcp_conf_prod.conf', 'r') as dhcpd_conf_file:
-        search_mac_address = "hardware ethernet " + mac_address + ";\n"
+    with open(production_config_file, 'r') as dhcpd_conf_file:
+        search_mac_address = "hardware ethernet " + mac_address.lower().replace('-', ':') + ";\n"
         config_file = dhcpd_conf_file.readlines()
-        host_entry = config_entry(mac_address)
+        host_entry = config_entry(mac_address.lower().replace('-', ':'))
         if search_mac_address_on_config_file in config_file:
             found_entry = ''.join(f[f.index(search_mac_address) - 7: f.index(search_mac_address) + 2])
             if host_entry[:-5] == found_entry:
@@ -165,7 +163,7 @@ def checking_for_network_settings_matches(mac_address):
 
 def check_allocation(mac_address):
     # Вернет истину если свитч в красноярском продакшине
-    allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address + "\"}';"
+    allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     allocation = sql_request(allocation_req)
     if allocation == 0:
         return False
@@ -179,7 +177,7 @@ def check_allocation(mac_address):
 
 def search_mac_address_on_config_file(mac_address):
     try:
-        search_mac_address = "hardware ethernet " + mac_address + ";\n"
+        search_mac_address = "hardware ethernet " + mac_address.lower().replace('-', ':') + ";\n"
         with open(production_config_file) as file_handler:
             config_file = file_handler.readlines()
             if search_mac_address in config_file:
@@ -201,27 +199,33 @@ def main():
     else:
         mac_regexp = r'((?:[0-9A-F]{2}-){5}[0-9A-F]{2})'
         while True:
+            dhcp_server_reboot_switch = 0 # переключалка для ребута DHCP сервера
             redis_all_keys = redis_db.keys()
             for keys in redis_all_keys:
+                if dhcp_server_reboot_switch:
+                    time.sleep(300)
+                    dhcp_server_reboot_switch = 0
+                    reboot_dhcp_server()
+                    time.sleep(120)
                 redis_current_key = keys.decode('utf-8')
                 current_mac_address = re.findall(mac_regexp, redis_current_key)
                 if not current_mac_address:
                     continue
-                # net_settings = get_network_settings('10-BE-F5-55-DC-C2')
-                # print(net_settings)
-                # print(config_entry('10-BE-F5-55-DC-C2'))
                 if check_allocation(current_mac_address[0]):
                     if search_mac_address_on_config_file(current_mac_address[0]):
                         if checking_for_network_settings_matches(current_mac_address[0]):
                             continue
                         else:
                             del_conf_entry(current_mac_address[0])
+                            dhcp_server_reboot_switch = 1
                             continue
                     else:
                         add_conf_entry(current_mac_address[0])
+                        dhcp_server_reboot_switch = 1
                         continue
                 elif search_mac_address_on_config_file(current_mac_address[0]):
                     del_conf_entry(current_mac_address)
+                    continue
                 else:
                     continue
 
