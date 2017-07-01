@@ -134,17 +134,17 @@ def del_conf_entry(mac_address):
 
 def get_network_settings(mac_address):
     sql_req_ip = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
-    ip_address = sql_request(sql_req_ip)[5]['ip']
     sql_req_models_id = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     models_id = sql_request(sql_req_models_id)[0]
     sql_req_models_name = "select data from models where id=" + str(models_id) + ";"
-    models_name = sql_request(sql_req_models_name)[0]['name']
     sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
     sql_req_network_address = "select network from subnets where id={};".format(subnet_id[0])
     sql_req_gateway = "select gw from subnets where id={};".format(subnet_id[0])
     network_address = sql_request(sql_req_network_address)[0]
+    ip_address = sql_request(sql_req_ip)[5]['ip']
     gateway_address = sql_request(sql_req_gateway)[0]
+    models_name = sql_request(sql_req_models_name)[0]['name']
     return network_address, ip_address, gateway_address, mac_address.lower().replace('-', ':'), models_name
 
 
