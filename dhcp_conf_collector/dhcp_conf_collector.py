@@ -4,14 +4,14 @@
     3) Если свитч в продакшине, то смотрит есть ли в DHCP конфиге запись с данным мак адресом
         3.1) Если свитч не в продакшине, то ищет данный свитч в DHCP конфиге по мак адресу
         3.2) Если свитч есть в DHCP конфиге (которого нет в базе), то удалаяет данную запись,
-            перезагрузает DHCP сервер и переходит в п.1)
+             и переходит в п.1)
         3.3) Если свитча нет в DHCP конфиге, то переходит в п.1)
-    4) Если запись в DHCP конфиге есть, то сравнивает его сетевые настройки
+    4) Если запись в DHCP конфиге есть, то сравнивает его сетевые настройки (switchbase с настройками конфига)
         4.1) Если записи с данный мак адресом в DHCP конфиге нет, то добавляет данную запись
-            и перезагрузает DHCP сервер
     5) Если настройки верные, то переходит в п.1)
         5.1) Если настройки неверные, то удаляет данную запись и добавляет новую запись с
-            верными сетевыми настройками и перезагрузает DHCP сервер
+            верными сетевыми настройками
+    6) Когда обходит все записи Редиса перезагрузает DHCP сервер (если были изменения в конфиге)
 
     Используемые функции:
     get_config_file_name - получение названия файла конфигурации модели для ф-ии config_entry
@@ -40,7 +40,8 @@ import subprocess
 import ipaddress
 
 
-production_config_file = '/etc/dhcpd/production.conf'
+# production_config_file = '/etc/dhcpd/production.conf'
+production_config_file = 'production.conf'
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
@@ -58,10 +59,14 @@ action = 'start'
 
 
 def get_config_file_name(model_name):
+    print('get_config_file_name')
     # для каждой модели следует написать свой конфиг
     bootfile_name = ""
     if model_name == 'DGS-1210-28/ME':
         bootfile_name = "cfg1210.cfg"
+    elif model_name == 'DES-3526':
+        bootfile_name = 'cfg3526.cfg'
+    print('Отсутствует файл конфигурации для модели:', model_name)
     return bootfile_name
 
 
@@ -87,8 +92,8 @@ def config_entry(mac_address):
 
 
 def reboot_dhcp_server():
-    subprocess.call(["/etc/init.d/dhcpd", "restart"])
-
+    # subprocess.call(["/etc/init.d/dhcpd", "restart"])
+    print('DHCP - перезагружен')
 
 def sql_request(sql):
     try:
@@ -153,12 +158,9 @@ def checking_for_network_settings_matches(mac_address):
         search_mac_address = "hardware ethernet " + mac_address.lower().replace('-', ':') + ";\n"
         config_file = dhcpd_conf_file.readlines()
         host_entry = config_entry(mac_address.lower().replace('-', ':'))
-        if search_mac_address_on_config_file in config_file:
-            found_entry = ''.join(f[f.index(search_mac_address) - 7: f.index(search_mac_address) + 2])
-            if host_entry[:-5] == found_entry:
-                return True
-            else:
-                return False
+        if search_mac_address in config_file:
+            found_entry = ''.join(config_file[config_file.index(search_mac_address) - 7: config_file.index(search_mac_address) + 2])
+            return True if host_entry[:-5] == found_entry else False
 
 
 def check_allocation(mac_address):
@@ -189,8 +191,8 @@ def search_mac_address_on_config_file(mac_address):
 
 
 def main():
-    # возможно стоит перезагружать ДЗЦП сервер отсюда после того как прошел по редису весь цикл
-    # и записал изсенения в конфиг
+    # переключалка для ребута DHCP сервера
+    dhcp_server_reboot_switch = 0
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
         response = redis_db.client_list()
@@ -199,14 +201,13 @@ def main():
     else:
         mac_regexp = r'((?:[0-9A-F]{2}-){5}[0-9A-F]{2})'
         while True:
-            dhcp_server_reboot_switch = 0 # переключалка для ребута DHCP сервера
+            if dhcp_server_reboot_switch:
+                time.sleep(300)
+                reboot_dhcp_server()
+                dhcp_server_reboot_switch = 0
+                time.sleep(120)
             redis_all_keys = redis_db.keys()
             for keys in redis_all_keys:
-                if dhcp_server_reboot_switch:
-                    time.sleep(300)
-                    dhcp_server_reboot_switch = 0
-                    reboot_dhcp_server()
-                    time.sleep(120)
                 redis_current_key = keys.decode('utf-8')
                 current_mac_address = re.findall(mac_regexp, redis_current_key)
                 if not current_mac_address:
