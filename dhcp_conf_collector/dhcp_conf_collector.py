@@ -204,19 +204,26 @@ def main():
             redis_all_keys = redis_db.keys()
             for keys in redis_all_keys:
                 redis_current_key = keys.decode('utf-8')
-                result = re.findall(mac_regexp, redis_current_key)
-                if not result:
+                current_mac_address = re.findall(mac_regexp, redis_current_key)
+                if not current_mac_address:
                     continue
-                net_settings = get_network_settings('10-BE-F5-55-DC-C2')
-                print(net_settings)
+                # net_settings = get_network_settings('10-BE-F5-55-DC-C2')
+                # print(net_settings)
                 # print(config_entry('10-BE-F5-55-DC-C2'))
-                # if check_allocation(result[0]) and search_mac_address_on_config_file(result[0]):
-                #
-                # elif search_mac_address_on_config_file(result[0]):
-                #     del_conf_entry(result[0])
-                #     continue
-                # else:
-                #     continue
+                if check_allocation(current_mac_address[0]):
+                    if search_mac_address_on_config_file(current_mac_address[0]):
+                        if checking_for_network_settings_matches(current_mac_address[0]):
+                            continue
+                        else:
+                            del_conf_entry(current_mac_address[0])
+                            continue
+                    else:
+                        add_conf_entry(current_mac_address[0])
+                        continue
+                elif search_mac_address_on_config_file(current_mac_address[0]):
+                    del_conf_entry(current_mac_address)
+                else:
+                    continue
 
 
 if __name__ == "__main__":
