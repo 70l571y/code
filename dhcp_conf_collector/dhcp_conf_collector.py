@@ -162,9 +162,7 @@ def check_allocation(mac_address):
     # Вернет истину если свитч в красноярском продакшине
     allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     allocation = sql_request(allocation_req)
-    if allocation == 0:
-        return False
-    elif allocation == None:
+    if allocation == 0 and allocation == None:
         return False
     elif allocation[4] == 1:
         city_allocation = "select * from allocation where id={};".format(allocation[4])
