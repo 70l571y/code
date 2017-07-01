@@ -135,21 +135,18 @@ def del_conf_entry(mac_address):
 
 def get_network_settings(mac_address):
     sql_req_ip = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
-    result_ip = sql_request(sql_req_ip)
+    ip_address = sql_request(sql_req_ip)[5]['ip']
     sql_req_models_id = "select model_id from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
-    result_models_id = sql_request(sql_req_models_id)
-    models_id = result_models_id[0]
+    models_id = sql_request(sql_req_models_id)[0]
     sql_req_models_name = "select data from models where id=" + str(models_id) + ";"
-    result_models_name = sql_request(sql_req_models_name)
-    models_name = result_models_name[0]['name']
-    ip_address = result_ip[5]['ip']
+    models_name = sql_request(sql_req_models_name)[0]['name']
     sql_req_subnet_id = "select subnet_id from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     subnet_id = sql_request(sql_req_subnet_id)
     sql_req_network_address = "select network from subnets where id={};".format(subnet_id[0])
     sql_req_gateway = "select gw from subnets where id={};".format(subnet_id[0])
-    network_address = sql_request(sql_req_network_address)
-    gateway_address = sql_request(sql_req_gateway)
-    return network_address[0], ip_address, gateway_address[0], mac_address.lower().replace('-', ':'), models_name
+    network_address = sql_request(sql_req_network_address)[0]
+    gateway_address = sql_request(sql_req_gateway)[0]
+    return network_address, ip_address, gateway_address, mac_address.lower().replace('-', ':'), models_name
 
 
 def checking_for_network_settings_matches(mac_address):
