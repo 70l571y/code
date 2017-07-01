@@ -59,14 +59,14 @@ action = 'start'
 
 
 def get_config_file_name(model_name):
-    print('get_config_file_name')
     # для каждой модели следует написать свой конфиг
     bootfile_name = ""
     if model_name == 'DGS-1210-28/ME':
         bootfile_name = "cfg1210.cfg"
     elif model_name == 'DES-3526':
         bootfile_name = 'cfg3526.cfg'
-    print('Отсутствует файл конфигурации для модели:', model_name)
+    else:
+        print('Отсутствует файл конфигурации для модели:', model_name)
     return bootfile_name
 
 
@@ -182,10 +182,7 @@ def search_mac_address_on_config_file(mac_address):
         search_mac_address = "hardware ethernet " + mac_address.lower().replace('-', ':') + ";\n"
         with open(production_config_file) as file_handler:
             config_file = file_handler.readlines()
-            if search_mac_address in config_file:
-                return True
-            else:
-                return False
+            return True if search_mac_address in config_file else False
     except (IOError, OSError):
         print("Error opening / processing file")
 
@@ -201,6 +198,7 @@ def main():
     else:
         mac_regexp = r'((?:[0-9A-F]{2}-){5}[0-9A-F]{2})'
         while True:
+            time.sleep(30)  # время отдыха между циклами полного чтения Редис
             if dhcp_server_reboot_switch:
                 time.sleep(300)
                 reboot_dhcp_server()
@@ -245,6 +243,8 @@ if __name__ == "__main__":
                                     host="localhost",
                                     port=server.local_bind_port)
             curs = conn.cursor()
+
+            # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
             main()
     except:
         print(time.ctime(), "Connection server - Failed")
