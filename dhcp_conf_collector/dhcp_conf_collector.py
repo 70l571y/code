@@ -87,7 +87,7 @@ def config_entry(mac_address):
                   config_bootfile_name + "\";\n" \
                   "option option-150 " + option_150 + ";\nhost " + host_models_name + " {\n" \
                   "hardware ethernet " + host_mac_address + \
-        ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
+                  ";\nfixed-address " + host_ip_address + ";\n}\n}\n}"
     return write_entry
 
 
