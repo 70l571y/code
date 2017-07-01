@@ -40,8 +40,8 @@ import subprocess
 import ipaddress
 
 
-# production_config_file = '/etc/dhcpd/production.conf'
-production_config_file = 'production.conf'
+production_config_file = '/etc/dhcpd/production.conf'
+
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
@@ -92,8 +92,7 @@ def config_entry(mac_address):
 
 
 def reboot_dhcp_server():
-    # subprocess.call(["/etc/init.d/dhcpd", "restart"])
-    print('DHCP - перезагружен')
+    subprocess.call(["/etc/init.d/dhcpd", "restart"])
 
 def sql_request(sql):
     try:
