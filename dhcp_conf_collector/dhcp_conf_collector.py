@@ -103,8 +103,7 @@ def sql_request(sql):
         print(time.ctime(), '- В базе данных нет такого устройства, или некорректен следующий запрос:\n', sql)
         return 0
     else:
-        rows = curs.fetchone()
-        return rows
+        return curs.fetchone()
 
 
 def add_conf_entry(mac_address):
