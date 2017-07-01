@@ -21,6 +21,7 @@
     add_conf_entry - добавление записи в конфиг DHCP сервера по заданному мак адресу из БД
     del_conf_entry - удаление записи из конфига DHCP сервера по заданному мак адресу
     get_network_settings - получение сетевых настроек хоста из базы по заданному мак адресу
+    checking_for_network_settings_matches - проверяет, есть ли актуальная запись в конфиге
     check_allocation - проверка есть ли свитч в продакшине
     search_mac_address_on_config_file - поиск заданного мак адреса в конфиге DHCP сервера
     main - бесконечное считывания мак адресов с БД Редис
@@ -118,12 +119,12 @@ def del_conf_entry(mac_address):
     try:
         with open(production_config_file, 'r') as dhcpd_conf_file:
             config_file = dhcpd_conf_file.readlines()
-            search_entry = "hardware ethernet {} ;".format(mac_address)
+            search_entry = "hardware ethernet {};".format(mac_address.lower())
             for i in range(len(config_file)):
                 if config_file[i].rstrip() == search_entry:
                     break
         with open(production_config_file, 'w') as save_dhcpd_conf_file:
-            del config_file[i - 6:i + 4]
+            del config_file[i - 8:i + 3]
             save_dhcpd_conf_file.writelines(config_file)
             reboot_dhcp_server()
     except (IOError, OSError):
