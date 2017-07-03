@@ -40,7 +40,7 @@ import ipaddress
 
 
 # production_config_file = '/etc/dhcpd/production.conf'
-production_config_file = 'production.conf'
+production_config_file = '/home/sid/PycharmProjects/dhcp/dhcp_conf_collector/production.conf'
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
@@ -54,7 +54,7 @@ nameOfPID = 'conf_collector'
 if not os.path.exists(pathToPID):
     os.makedirs(pathToPID)
 out = {'stdout': pathToPID + nameOfPID + '.log'}
-action = 'start'
+action = 'stop'
 
 
 def get_config_file_name(model_name):
@@ -239,10 +239,11 @@ if __name__ == "__main__":
             curs = conn.cursor()
 
             # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
-            main()
+            # main()
     except:
         print(time.ctime(), "Connection server - Failed")
 
-    # else:
+    else:
+        daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
     #     main()
 # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
