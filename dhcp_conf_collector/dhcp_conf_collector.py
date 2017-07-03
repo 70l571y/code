@@ -12,7 +12,6 @@
         5.1) Если настройки неверные, то удаляет данную запись и добавляет новую запись с
             верными сетевыми настройками
     6) Когда обходит все записи Редиса перезагрузает DHCP сервер (если были изменения в конфиге)
-
     Используемые функции:
     get_config_file_name - получение названия файла конфигурации модели для ф-ии config_entry
     config_entry - сформированная запись в конфиг DHCP сервера
@@ -41,7 +40,7 @@ import ipaddress
 
 
 production_config_file = '/etc/dhcpd/production.conf'
-
+# production_config_file = 'production.conf'
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
@@ -93,6 +92,8 @@ def config_entry(mac_address):
 
 def reboot_dhcp_server():
     subprocess.call(["/etc/init.d/dhcpd", "restart"])
+    # print('reboot dhcp server...')
+
 
 def sql_request(sql):
     try:
@@ -162,7 +163,7 @@ def check_allocation(mac_address):
     # Вернет истину если свитч в красноярском продакшине
     allocation_req = "select * from switches where switch_data @>'{\"mac\": \"" + mac_address.upper().replace(':', '-') + "\"}';"
     allocation = sql_request(allocation_req)
-    if allocation == 0 and allocation == None:
+    if (allocation == 0) or (allocation == None):
         return False
     elif allocation[4] == 1:
         city_allocation = "select * from allocation where id={};".format(allocation[4])
@@ -193,10 +194,10 @@ def main():
         while True:
             time.sleep(30)  # время отдыха между циклами полного чтения Редис
             if dhcp_server_reboot_switch:
-                time.sleep(300)
+                time.sleep(5)
                 reboot_dhcp_server()
                 dhcp_server_reboot_switch = 0
-                time.sleep(120)
+                time.sleep(180)
             redis_all_keys = redis_db.keys()
             for keys in redis_all_keys:
                 redis_current_key = keys.decode('utf-8')
@@ -244,4 +245,4 @@ if __name__ == "__main__":
 
     # else:
     #     main()
-        # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
+# daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
