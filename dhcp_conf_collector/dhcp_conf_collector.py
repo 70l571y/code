@@ -238,5 +238,3 @@ if __name__ == "__main__":
     action = 'start'
 
     daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
-
-
