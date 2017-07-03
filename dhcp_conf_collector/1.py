@@ -4,14 +4,15 @@ import json
 import redis
 import re
 import os
-from daemon import daemon_exec
+from other.daemon import daemon_exec
 import time
 import sys
 # import subprocess
 import ipaddress
 
 sys.path.append("..")
-production_config_file = '/home/sid/Documents/production.conf'
+# production_config_file = '/home/sid/Documents/production.conf'
+production_config_file = '/home/sid/PycharmProjects/dhcp/dhcp_conf_collector/production.conf'
 
 
 # configs and firmwares settings
@@ -279,5 +280,5 @@ if __name__ == "__main__":
     if not os.path.exists(pathToPID):
         os.makedirs(pathToPID)
     out = {'stdout': pathToPID + nameOfPID + '.log'}
-    action = 'stop'
+    action = 'start'
     daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
