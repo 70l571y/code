@@ -39,22 +39,12 @@ import subprocess
 import ipaddress
 
 
-# production_config_file = '/etc/dhcpd/production.conf'
-production_config_file = '/home/sid/PycharmProjects/dhcp/dhcp_conf_collector/production.conf'
+production_config_file = '/etc/dhcpd/production.conf'
+
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
 option_150 = tftp_server_name
-
-
-# daemon settings
-sys.path.append("..")
-pathToPID = '/tmp/roman/daemons/'
-nameOfPID = 'conf_collector'
-if not os.path.exists(pathToPID):
-    os.makedirs(pathToPID)
-out = {'stdout': pathToPID + nameOfPID + '.log'}
-action = 'stop'
 
 
 def get_config_file_name(model_name):
@@ -91,19 +81,33 @@ def config_entry(mac_address):
 
 
 def reboot_dhcp_server():
-    # subprocess.call(["/etc/init.d/dhcpd", "restart"])
-    print('reboot dhcp server...')
+    subprocess.call(["/etc/init.d/dhcpd", "restart"])
 
 
 def sql_request(sql):
+    with open('/home/sid/PycharmProjects/dhcp/other/config.json') as f:
+        config = json.load(f)
     try:
-        curs.execute(sql)
-    except (psycopg2.Error) as error:
-        print(error)
-        print(time.ctime(), '- В базе данных нет такого устройства, или некорректен следующий запрос:\n', sql)
-        return 0
-    else:
-        return curs.fetchone()
+        with SSHTunnelForwarder(
+                (config['ssh_host'], int(config['ssh_port'])),
+                ssh_password=config['password'],
+                ssh_username=config['username'],
+                remote_bind_address=('127.0.0.1', 5432)) as server:
+            server.start()
+            conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password,
+                                    host="localhost",
+                                    port=server.local_bind_port)
+            curs = conn.cursor()
+        try:
+            curs.execute(sql)
+        except (psycopg2.Error) as error:
+            print(error)
+            print(time.ctime(), '- В базе данных нет такого устройства, или некорректен следующий запрос:\n', sql)
+            return 0
+        else:
+            return curs.fetchone()
+    except:
+        print(time.ctime(), "Connection server - Failed")
 
 
 def add_conf_entry(mac_address):
@@ -182,7 +186,6 @@ def search_mac_address_on_config_file(mac_address):
 
 
 def main():
-    # переключалка для ребута DHCP сервера
     dhcp_server_reboot_switch = 0
     redis_db = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
     try:
@@ -224,26 +227,16 @@ def main():
 
 
 if __name__ == "__main__":
-    with open('/home/sid/PycharmProjects/dhcp/other/config.json') as f:
-        config = json.load(f)
-    try:
-        with SSHTunnelForwarder(
-                (config['ssh_host'], int(config['ssh_port'])),
-                ssh_password=config['password'],
-                ssh_username=config['username'],
-                remote_bind_address=('127.0.0.1', 5432)) as server:
-            server.start()
-            conn = psycopg2.connect(database="switchbase", user=server.ssh_username, password=server.ssh_password,
-                                    host="localhost",
-                                    port=server.local_bind_port)
-            curs = conn.cursor()
 
-            # daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
-            # main()
-    except:
-        print(time.ctime(), "Connection server - Failed")
+    # daemon settings
+    sys.path.append("..")
+    pathToPID = '/tmp/roman/daemons/'
+    nameOfPID = 'conf_collector'
+    if not os.path.exists(pathToPID):
+        os.makedirs(pathToPID)
+    out = {'stdout': pathToPID + nameOfPID + '.log'}
+    action = 'start'
 
-    else:
-        daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
-    #     main()
-# daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
+    daemon_exec(main, action, pathToPID + nameOfPID + '.pid', **out)
+
+
