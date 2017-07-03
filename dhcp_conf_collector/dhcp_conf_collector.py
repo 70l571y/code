@@ -39,8 +39,8 @@ import subprocess
 import ipaddress
 
 
-production_config_file = '/etc/dhcpd/production.conf'
-# production_config_file = 'production.conf'
+# production_config_file = '/etc/dhcpd/production.conf'
+production_config_file = 'production.conf'
 
 # configs and firmwares settings
 tftp_server_name = '80.65.17.254'
@@ -91,8 +91,8 @@ def config_entry(mac_address):
 
 
 def reboot_dhcp_server():
-    subprocess.call(["/etc/init.d/dhcpd", "restart"])
-    # print('reboot dhcp server...')
+    # subprocess.call(["/etc/init.d/dhcpd", "restart"])
+    print('reboot dhcp server...')
 
 
 def sql_request(sql):
@@ -109,7 +109,7 @@ def sql_request(sql):
 def add_conf_entry(mac_address):
     host_entry = config_entry(mac_address.lower().replace('-', ':'))
 
-    with open(production_config_file, 'r') as dhcpd_conf_file:
+    with open(production_config_file) as dhcpd_conf_file:
         config_file = dhcpd_conf_file.readlines()
 
     with open(production_config_file, 'w') as save_dhcpd_conf_file:
@@ -120,7 +120,7 @@ def add_conf_entry(mac_address):
 
 def del_conf_entry(mac_address):
     try:
-        with open(production_config_file, 'r') as dhcpd_conf_file:
+        with open(production_config_file) as dhcpd_conf_file:
             config_file = dhcpd_conf_file.readlines()
             search_entry = "hardware ethernet {};".format(mac_address.lower().replace('-', ':'))
             for i in range(len(config_file)):
@@ -150,7 +150,7 @@ def get_network_settings(mac_address):
 
 
 def checking_for_network_settings_matches(mac_address):
-    with open(production_config_file, 'r') as dhcpd_conf_file:
+    with open(production_config_file) as dhcpd_conf_file:
         search_mac_address = "hardware ethernet " + mac_address.lower().replace('-', ':') + ";\n"
         config_file = dhcpd_conf_file.readlines()
         host_entry = config_entry(mac_address.lower().replace('-', ':'))
