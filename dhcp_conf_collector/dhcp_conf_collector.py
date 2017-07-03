@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     # daemon settings
     sys.path.append("..")
-    pathToPID = '/tmp/roman/daemons/'
+    pathToPID = '/tmp/autoregistration/daemons/'
     nameOfPID = 'conf_collector'
     if not os.path.exists(pathToPID):
         os.makedirs(pathToPID)

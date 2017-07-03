@@ -7,7 +7,7 @@ from other.daemon import daemon_exec
 
 ip_mac_regexp = r'(([^:]+):){3} ([^ ]+ ){2}(?P<ip>[^ ]+) [^ ]+ (?P<mac>[^ ]+)'
 
-path = "/home/sid/PycharmProjects/dhcp/dhcp_parser/dhcpgen.log"
+path = "/var/log/dhcpd.log"
 
 def process_line(line):
     if 'DHCPOFFER' in line:
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         print("Connection refused - Unable to connect to Redis")
     else:
         sys.path.append("..")
-        pathToPID = '/tmp/roman/daemons/'
+        pathToPID = '/tmp/autoregistration/daemons/'
         nameOfPID = 'dhcp_parser'
         if not os.path.exists(pathToPID):
             os.makedirs(pathToPID)
