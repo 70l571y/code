@@ -1,0 +1,11 @@
+{
+  "redis": {
+    "server": "localhost:6379",
+    "password": "",
+    "db": 0},
+  "parser": {
+    "parser_log": "/tmp/autoregistration/parser.log",
+    "dhcp_log": "/var/log/dhcpd.log",
+    "check_interval": 1
+  }
+}

@@ -1,0 +1,33 @@
+# Конфиг для подключения к БД PostgreSQL
+postgresql:
+  host: host
+  port: 1234
+  name: base
+  username: username
+  password: pass
+
+# Конфиг для доступа на свитчи (без использования TACACS+)
+switch:
+  login: login
+  password: pass
+
+# Конфиг для подключения к кролику сообщений (RabbitMQ)
+rabbit:
+  host: hsot
+  port: 1234
+  queue: autoconfig
+  username: user
+  password: pass
+  exchange: autoconfig
+  exchange_type: fanout
+
+# Конфиг для подключению к БД Redis
+redis:
+  db: 0
+  host: localhost
+  port: 6379
+  password: pass
+
+# Настройки регистратора (стенд для настройки свитчей)
+registrar:
+  ip: 192.168.1.1

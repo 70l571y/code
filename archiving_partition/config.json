@@ -1,0 +1,32 @@
+{
+  "db": {
+    "host": "localhost",
+    "name": "zabbix",
+    "user": "user",
+    "pass": "pass"
+  },
+  "path": {
+    "db": "/db_tmp/mysql/tokudb_files/",
+    "raid": "/mnt_2/zabbix/",
+    "fast_raid": "/mnt/zabbix_data/"
+  },
+  "settings": {
+    "firstStartHour": 6,
+    "secondStartHour": 18,
+    "startMinute": 10,
+    "daysBeforeRemoval": 14
+  },
+  "partition_tables": [
+    "history",
+    "history_uint",
+    "history_text",
+    "history_log",
+    "history_str",
+    "trends",
+    "trends_uint"
+  ],
+  "remove_tables": [
+    "history",
+    "history_uint"
+  ]
+}

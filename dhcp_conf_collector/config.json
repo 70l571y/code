@@ -1,0 +1,19 @@
+{
+    "redis": {
+        "server": "localhost:6379",
+        "password": "pass",
+        "db": 0
+    },
+    "postgres": {
+        "db_name": "switchbase",
+        "db_username": "username",
+        "db_password": "pass",
+        "db_server": "i.am.server.com",
+        "db_port": 5432
+    },
+    "collector": {
+        "collector_log": "/tmp/collector.log",
+        "conf_file": "/etc/dhcp/production.conf",
+        "update_interval": 5
+    }
+}

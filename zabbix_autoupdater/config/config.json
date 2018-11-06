@@ -1,0 +1,16 @@
+{
+    "ftp_server": "192.168.1.1",
+    "ftp_username": "username",
+    "ftp_password": "pass",
+    "zabbix_server": "zabbix.server.com",
+    "zabbix_username": "username",
+    "zabbix_password": "pass",
+    "icmp_template": 10307,
+    "abk_proxyid": [43690],
+    "brk_proxyid": [41199],
+    "irk_proxyid": [],
+    "kns_proxyid": [41969],
+    "krk_proxyid": [10313, 10314, 10315, 10316, 10317, 10318],
+    "number_of_hosts_at_one_tkd": 1000,
+    "devices_in_thread": 1000
+}
