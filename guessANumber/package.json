@@ -1,0 +1,15 @@
+{
+  "name": "guess",
+  "version": "1.0.0",
+  "description": "Guess a number!",
+  "main": "guess.js",
+  "scripts": {
+    "test": "mocha guess.test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4"
+  }
+}
