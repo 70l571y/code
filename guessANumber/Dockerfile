@@ -3,6 +3,7 @@ FROM node:10
 ARG APP_DIR=app
 RUN mkdir -p ${APP_DIR}
 WORKDIR ${APP_DIR}
-COPY . .
-EXPOSE 3000
+COPY package*.json ./
+RUN npm install
+COPY . /app
 CMD ["node", "guess.js"]
